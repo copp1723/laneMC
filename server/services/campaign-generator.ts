@@ -603,12 +603,11 @@ Return review as JSON.`;
     }
   }
 
-  private async saveCampaign(campaignData: any, conversationId: string): Promise<{ id: string }> {
+  private async saveCampaign(campaignData: any, conversationId: string, googleAdsAccountId: string): Promise<{ id: string }> {
     const campaign: InsertCampaign = {
       name: campaignData.campaign?.name || 'AI Generated Campaign',
       status: 'draft',
-      userId: '', // This should come from the authenticated user
-      customerId: '', // This should come from the selected account
+      googleAdsAccountId,
       campaignType: 'SEARCH',
       budget: campaignData.budget?.amount || 1000,
       targetingCriteria: JSON.stringify(campaignData.targeting || {}),

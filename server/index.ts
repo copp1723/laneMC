@@ -38,6 +38,13 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+  
+  // Start automation engine in production
+  if (process.env.ENVIRONMENT === 'production') {
+    const { automationEngine } = await import('./services/automation-engine');
+    await automationEngine.start();
+    console.log('🤖 Lane MCP Automation Engine started');
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
