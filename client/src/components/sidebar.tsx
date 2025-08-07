@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import ClientSelector from './client-selector';
+import ClientSelector from '@/components/client-selector';
 import { 
   MessageSquare, 
   BarChart3, 
@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut
 } from 'lucide-react';
+import type { GoogleAdsAccount } from '@shared/schema';
 
 const navigationItems = [
   { id: 'chat', label: 'AI Chat', icon: MessageSquare, active: true },
@@ -19,7 +20,12 @@ const navigationItems = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  selectedClient?: GoogleAdsAccount | null;
+  onClientChange?: (client: GoogleAdsAccount | null) => void;
+}
+
+export default function Sidebar({ selectedClient, onClientChange }: SidebarProps) {
   const { user, logout } = useAuth();
   const [activeItem, setActiveItem] = useState('chat');
 
@@ -40,7 +46,7 @@ export default function Sidebar() {
 
       {/* Client Selector */}
       <div className="p-4 border-b border-slate-200">
-        <ClientSelector />
+        <ClientSelector onClientChange={onClientChange} />
       </div>
 
       {/* Navigation Menu */}

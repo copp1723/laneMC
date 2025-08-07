@@ -1,14 +1,16 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from '@/components/sidebar';
 import QuickInsights from '@/components/quick-insights';
 import ChatInterface from '@/components/chat-interface';
 import CampaignApprovalModal from '@/components/campaign-approval-modal';
+import type { GoogleAdsAccount } from '@shared/schema';
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const [selectedClient, setSelectedClient] = useState<GoogleAdsAccount | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -35,12 +37,12 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-slate-50">
-      <Sidebar />
+      <Sidebar selectedClient={selectedClient} onClientChange={setSelectedClient} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden">
-          <QuickInsights />
-          <ChatInterface />
+          <QuickInsights selectedClient={selectedClient} />
+          <ChatInterface selectedClient={selectedClient} />
         </div>
       </div>
       

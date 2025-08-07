@@ -135,13 +135,18 @@ export class DbStorage implements IStorage {
 
   // Chat methods
   async getChatSessions(userId: string, googleAdsAccountId?: string): Promise<ChatSession[]> {
-    let query = db.select().from(chatSessions).where(eq(chatSessions.userId, userId));
-    
     if (googleAdsAccountId) {
-      query = query.where(eq(chatSessions.googleAdsAccountId, googleAdsAccountId));
+      return await db.select().from(chatSessions)
+        .where(and(
+          eq(chatSessions.userId, userId),
+          eq(chatSessions.googleAdsAccountId, googleAdsAccountId)
+        ))
+        .orderBy(desc(chatSessions.createdAt));
     }
     
-    return await query.orderBy(desc(chatSessions.createdAt));
+    return await db.select().from(chatSessions)
+      .where(eq(chatSessions.userId, userId))
+      .orderBy(desc(chatSessions.createdAt));
   }
 
   async getChatSession(id: string): Promise<ChatSession | undefined> {
@@ -192,14 +197,18 @@ export class DbStorage implements IStorage {
 
   // Performance metrics methods
   async getPerformanceMetrics(googleAdsAccountId: string, campaignId?: string): Promise<PerformanceMetrics[]> {
-    let query = db.select().from(performanceMetrics)
-      .where(eq(performanceMetrics.googleAdsAccountId, googleAdsAccountId));
-    
     if (campaignId) {
-      query = query.where(eq(performanceMetrics.campaignId, campaignId));
+      return await db.select().from(performanceMetrics)
+        .where(and(
+          eq(performanceMetrics.googleAdsAccountId, googleAdsAccountId),
+          eq(performanceMetrics.campaignId, campaignId)
+        ))
+        .orderBy(desc(performanceMetrics.date));
     }
     
-    return await query.orderBy(desc(performanceMetrics.date));
+    return await db.select().from(performanceMetrics)
+      .where(eq(performanceMetrics.googleAdsAccountId, googleAdsAccountId))
+      .orderBy(desc(performanceMetrics.date));
   }
 
   async createPerformanceMetrics(metrics: InsertPerformanceMetrics): Promise<PerformanceMetrics> {
@@ -209,14 +218,18 @@ export class DbStorage implements IStorage {
 
   // Budget pacing methods
   async getBudgetPacing(googleAdsAccountId: string, campaignId?: string): Promise<BudgetPacing[]> {
-    let query = db.select().from(budgetPacing)
-      .where(eq(budgetPacing.googleAdsAccountId, googleAdsAccountId));
-    
     if (campaignId) {
-      query = query.where(eq(budgetPacing.campaignId, campaignId));
+      return await db.select().from(budgetPacing)
+        .where(and(
+          eq(budgetPacing.googleAdsAccountId, googleAdsAccountId),
+          eq(budgetPacing.campaignId, campaignId)
+        ))
+        .orderBy(desc(budgetPacing.date));
     }
     
-    return await query.orderBy(desc(budgetPacing.date));
+    return await db.select().from(budgetPacing)
+      .where(eq(budgetPacing.googleAdsAccountId, googleAdsAccountId))
+      .orderBy(desc(budgetPacing.date));
   }
 
   async createBudgetPacing(pacing: InsertBudgetPacing): Promise<BudgetPacing> {
