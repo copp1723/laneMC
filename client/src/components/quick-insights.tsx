@@ -34,19 +34,19 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                  <AlertTriangle className="w-4 h-4 text-slate-600" />
                   <CardTitle className="text-sm">Action Required</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="pt-0 space-y-3">
-                <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-                  <div className="text-sm font-medium text-orange-900">Budget Alert</div>
-                  <div className="text-xs text-orange-700 mt-1">Projected overspend: $8,500 this month</div>
-                  <Button size="sm" className="mt-2 h-7 text-xs bg-orange-600 hover:bg-orange-700">
+                <div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
+                  <div className="text-sm font-medium text-slate-900">Budget Alert</div>
+                  <div className="text-xs text-slate-700 mt-1">Projected overspend: $8,500 this month</div>
+                  <Button size="sm" className="mt-2 h-7 text-xs">
                     Review Budget
                   </Button>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
                   <div className="text-sm font-medium text-slate-900">Revenue Opportunity</div>
                   <div className="text-xs text-slate-700 mt-1">Potential +$23K monthly from 3 campaigns</div>
                   <Button size="sm" className="mt-2 h-7 text-xs">
@@ -60,7 +60,7 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-green-600" />
+                  <Target className="w-4 h-4 text-slate-600" />
                   <CardTitle className="text-sm">Impact Opportunities</CardTitle>
                 </div>
               </CardHeader>
@@ -71,7 +71,7 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
                     <div className="text-xs text-slate-600">From keyword expansion</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-green-600">+$23,400</div>
+                    <div className="text-lg font-bold text-slate-900">+$23,400</div>
                     <div className="text-xs text-slate-500">Est. monthly</div>
                   </div>
                 </div>
@@ -81,7 +81,7 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
                     <div className="text-xs text-slate-600">From bid optimization</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-blue-600">-$4,200</div>
+                    <div className="text-lg font-bold text-slate-900">-$4,200</div>
                     <div className="text-xs text-slate-500">Monthly CPC</div>
                   </div>
                 </div>
@@ -92,28 +92,28 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-purple-600" />
+                  <Brain className="w-4 h-4 text-slate-600" />
                   <CardTitle className="text-sm">AI Automations</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="pt-0 space-y-2">
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
                     <span className="text-sm">Budget Pacing</span>
                   </div>
                   <Badge variant="secondary" className="text-xs">Active</Badge>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
                     <span className="text-sm">Bid Optimization</span>
                   </div>
                   <Badge variant="secondary" className="text-xs">Active</Badge>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
                     <span className="text-sm">Keyword Discovery</span>
                   </div>
                   <Badge variant="outline" className="text-xs">Ready</Badge>
@@ -125,7 +125,7 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-orange-500" />
+                  <Zap className="w-4 h-4 text-slate-600" />
                   <CardTitle className="text-sm">Quick Actions</CardTitle>
                 </div>
               </CardHeader>
