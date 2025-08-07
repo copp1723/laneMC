@@ -74,17 +74,17 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
   if (error) {
     return (
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-slate-300">Current Client</Label>
-        <div className="flex items-center space-x-2 p-3 bg-red-900/20 border border-red-600 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-red-400" />
-          <span className="text-sm text-red-300">Failed to load accounts</span>
+        <Label className="text-sm font-medium text-slate-700">Current Client</Label>
+        <div className="flex items-center space-x-2 p-3 bg-slate-200 border border-slate-300 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-slate-600" />
+          <span className="text-sm text-slate-700">Failed to load accounts</span>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={handleSync}
           disabled={syncMutation.isPending}
-          className="w-full bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+          className="w-full"
         >
           {syncMutation.isPending && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
           Retry
@@ -96,13 +96,13 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium text-slate-300">Current Client</Label>
+        <Label className="text-sm font-medium text-slate-700">Current Client</Label>
         <Button
           variant="outline"
           size="sm"
           onClick={handleSync}
           disabled={syncMutation.isPending}
-          className="h-6 px-2 text-xs bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+          className="h-6 px-2 text-xs"
         >
           {syncMutation.isPending ? (
             <RefreshCw className="w-3 h-3 animate-spin" />
@@ -113,18 +113,17 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
       </div>
       
       {isLoading ? (
-        <div className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg animate-pulse">
-          <div className="h-4 bg-slate-600 rounded"></div>
+        <div className="w-full px-3 py-2 bg-slate-200 border border-slate-300 rounded-lg animate-pulse">
+          <div className="h-4 bg-slate-300 rounded"></div>
         </div>
       ) : accounts.length === 0 ? (
         <div className="text-center py-4">
-          <p className="text-sm text-slate-400 mb-2">No Google Ads accounts found</p>
+          <p className="text-sm text-slate-600 mb-2">No Google Ads accounts found</p>
           <Button
             variant="outline"
             size="sm"
             onClick={handleSync}
             disabled={syncMutation.isPending}
-            className="bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
           >
             {syncMutation.isPending && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
             Sync Accounts
@@ -132,12 +131,12 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
         </div>
       ) : (
         <Select value={selectedClientId} onValueChange={handleClientChange}>
-          <SelectTrigger className="w-full bg-white border-slate-300 text-slate-900 hover:bg-slate-50">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select client account" />
           </SelectTrigger>
-          <SelectContent className="bg-white border-slate-300">
+          <SelectContent>
             {accounts.map((account) => (
-              <SelectItem key={account.id} value={account.id} className="text-slate-900 hover:bg-slate-100">
+              <SelectItem key={account.id} value={account.id}>
                 <div className="flex items-center justify-between w-full">
                   <div>
                     <div className="font-medium">{account.name}</div>
