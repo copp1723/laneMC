@@ -681,6 +681,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Budget pacing routes  
+  app.get('/api/budget-pacing/:accountId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { accountId } = req.params;
+      const { campaignId } = req.query;
+      
+      const result = await budgetPacingService.getBudgetStatus(
+        accountId, 
+        campaignId as string
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error getting budget status:', error);
+      res.status(500).json({ error: 'Failed to get budget status' });
+    }
+  });
+
+  // Apply budget recommendation
+  app.post('/api/budget-pacing/:accountId/:campaignId/apply', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { accountId, campaignId } = req.params;
+      const { recommendedBudget } = req.body;
+      
+      // Get the account
+      const account = await storage.getGoogleAdsAccount(accountId);
+      if (!account) {
+        return res.status(404).json({ error: 'Account not found' });
+      }
+      
+      // Apply the budget change via Google Ads API
+      await googleAdsService.updateCampaignBudget(
+        account.customerId,
+        campaignId,
+        recommendedBudget
+      );
+      
+      res.json({ success: true, appliedBudget: recommendedBudget });
+    } catch (error) {
+      console.error('Error applying budget recommendation:', error);
+      res.status(500).json({ error: 'Failed to apply budget recommendation' });
+    }
+  });
+
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ 

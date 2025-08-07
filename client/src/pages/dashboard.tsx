@@ -7,6 +7,7 @@ import ChatInterface from '@/components/chat-interface';
 import CampaignApprovalModal from '@/components/campaign-approval-modal';
 import EscalationSettings from '@/components/escalation-settings';
 import BudgetPacingCard from '@/components/budget-pacing-card';
+import { BudgetPacingDashboard } from '@/components/BudgetPacingDashboard';
 import MonitoringCard from '@/components/monitoring-card';
 import SchedulerCard from '@/components/scheduler-card';
 import CampaignGenerationCard from '@/components/campaign-generation-card';
@@ -50,6 +51,18 @@ export default function Dashboard() {
     switch (activeView) {
       case 'escalation':
         return <EscalationSettings selectedClient={selectedClient} />;
+      case 'budget-pacing':
+        return selectedClient ? (
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+            <BudgetPacingDashboard accountId={selectedClient.id} />
+          </div>
+        ) : (
+          <div className="flex-1 p-6 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              Select a client to view budget pacing
+            </div>
+          </div>
+        );
       case 'automation':
         return (
           <div className="flex-1 p-6 space-y-6 overflow-y-auto">
