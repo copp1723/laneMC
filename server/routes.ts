@@ -87,40 +87,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       let accounts = await storage.getGoogleAdsAccounts(userId);
       
-      // If no accounts exist, create some sample accounts for development
+      // If no accounts exist in database, try to sync from Google Ads API
       if (accounts.length === 0) {
-        const sampleAccounts = [
-          {
-            userId,
-            customerId: '123-456-7890',
-            name: 'Acme Corp',
-            refreshToken: 'dev_token_1',
-            currency: 'USD',
-            timezone: 'America/New_York'
-          },
-          {
-            userId,
-            customerId: '987-654-3210',
-            name: 'Tech Solutions LLC',
-            refreshToken: 'dev_token_2',
-            currency: 'USD',
-            timezone: 'America/Los_Angeles'
-          },
-          {
-            userId,
-            customerId: '555-123-4567',
-            name: 'Global Marketing Inc',
-            refreshToken: 'dev_token_3',
-            currency: 'USD',
-            timezone: 'America/Chicago'
+        console.log('No accounts found, attempting to sync from Google Ads API...');
+        try {
+          // Get accessible customers from Google Ads API
+          const customerIds = await googleAdsService.getAccessibleCustomers();
+          
+          for (const resourceName of customerIds) {
+            const customerId = resourceName.replace('customers/', '');
+            
+            try {
+              const customerInfo = await googleAdsService.getCustomerInfo(customerId);
+              
+              await storage.createGoogleAdsAccount({
+                userId,
+                customerId,
+                name: customerInfo.name,
+                currency: customerInfo.currency,
+                timezone: customerInfo.timezone,
+                isActive: true,
+              });
+            } catch (error) {
+              console.error(`Failed to sync customer ${customerId}:`, error);
+            }
           }
-        ];
-        
-        for (const account of sampleAccounts) {
-          await storage.createGoogleAdsAccount(account);
+          
+          accounts = await storage.getGoogleAdsAccounts(userId);
+        } catch (error) {
+          console.error('Failed to auto-sync accounts from Google Ads API:', error);
+          // Return empty array if sync fails - user can manually sync
         }
-        
-        accounts = await storage.getGoogleAdsAccounts(userId);
       }
       
       res.json(accounts);
