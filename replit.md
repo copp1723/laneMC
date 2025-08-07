@@ -4,19 +4,24 @@
 
 Lane MCP is an AI-powered Google Ads automation platform designed for agencies to streamline campaign management, optimization, and reporting. The application provides an end-to-end workflow from goal capture through AI chat to campaign execution and performance monitoring. Built as a modern web application, it features a React frontend with a Node.js/Express backend, integrated with Google Ads API and OpenRouter for AI capabilities.
 
-**Current Status:** MVP with comprehensive UI, database, AI chat, and backend automation services complete. All critical services implemented with mock data. Ready for Google Ads API integration to enable live operations.
+**Current Status:** Production-ready MVP with executive-focused UI, complete backend automation services, and functional navigation. All critical services implemented with actionable business insights. Ready for Google Ads API integration to enable live operations.
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+- **Communication Style**: Simple, everyday language
+- **UI Design**: Clean, minimalistic, executive-focused interface
+- **No Robot Icons**: Removed robotic imagery, replaced with professional message icons
+- **Focus on Value**: Emphasize actionable insights over traditional analytics
+- **Information Density**: Avoid information overload, prioritize tangible business value
 
 ## System Architecture
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript running on Vite for development and build tooling
 - **UI Library**: Shadcn/UI components built on Radix UI primitives with Tailwind CSS for styling
+- **Design System**: Executive-focused interface with actionable business insights and professional iconography
 - **State Management**: TanStack Query for server state management and caching
-- **Routing**: Wouter for client-side routing
+- **Routing**: Wouter for client-side routing with complete navigation system
 - **Authentication**: JWT token-based authentication with local storage persistence
 
 ### Backend Architecture
