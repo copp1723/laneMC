@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useChat } from '@/hooks/use-chat';
-import { Bot, User, Trash2, Send } from 'lucide-react';
+import { MessageCircle, User, Trash2, Send } from 'lucide-react';
 import type { GoogleAdsAccount } from '@shared/schema';
 
 interface ChatInterfaceProps {
@@ -101,7 +101,7 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
       <div className="flex-1 flex flex-col bg-white">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <Bot className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <MessageCircle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-900 mb-2">Select a client to start</h3>
             <p className="text-slate-500">Choose a Google Ads account to begin your AI chat session</p>
           </div>
@@ -139,15 +139,15 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.length === 0 && !isStreaming && (
           <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <MessageCircle className="w-4 h-4 text-white" />
             </div>
             <div className="max-w-[85%]">
               <div className="bg-slate-100 rounded-lg p-4">
                 <p className="text-sm text-slate-700">
-                  Hello! I'm your Google Ads AI assistant. I can help you with campaign optimization, 
-                  budget management, keyword research, and performance analysis. What would you like 
-                  to work on today for {selectedClient.name}?
+                  I'm your Google Ads automation assistant. I can help optimize campaigns, 
+                  manage budgets, analyze performance, and implement AI-driven strategies. What would you like 
+                  to work on for {selectedClient.name}?
                 </p>
               </div>
               <div className="text-xs text-slate-500 mt-1">Just now</div>
@@ -163,8 +163,8 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
             }`}
           >
             {message.role === 'assistant' && (
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="w-4 h-4 text-white" />
               </div>
             )}
             
@@ -194,8 +194,8 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
         {/* Streaming message */}
         {isStreaming && (
           <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <MessageCircle className="w-4 h-4 text-white" />
             </div>
             <div className="max-w-[85%]">
               <div className="bg-slate-100 rounded-lg p-4">
