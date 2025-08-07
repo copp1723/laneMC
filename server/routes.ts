@@ -71,7 +71,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
-    res.json({ user: req.user });
+    res.json({ 
+      user: { 
+        id: req.user!.id, 
+        username: req.user!.username, 
+        email: req.user!.email, 
+        role: req.user!.role 
+      } 
+    });
   });
 
   // Google Ads Account routes
