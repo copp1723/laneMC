@@ -24,7 +24,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Google Ads Account management
-  getGoogleAdsAccounts(): Promise<GoogleAdsAccount[]>;
+  getGoogleAdsAccounts(userId: string): Promise<GoogleAdsAccount[]>;
   getGoogleAdsAccount(id: string): Promise<GoogleAdsAccount | undefined>;
   getGoogleAdsAccountByCustomerId(customerId: string): Promise<GoogleAdsAccount | undefined>;
   createGoogleAdsAccount(account: InsertGoogleAdsAccount): Promise<GoogleAdsAccount>;
@@ -81,8 +81,8 @@ export class DbStorage implements IStorage {
   }
 
   // Google Ads Account methods
-  async getGoogleAdsAccounts(): Promise<GoogleAdsAccount[]> {
-    return await db.select().from(googleAdsAccounts).where(eq(googleAdsAccounts.isActive, true));
+  async getGoogleAdsAccounts(userId: string): Promise<GoogleAdsAccount[]> {
+    return await db.select().from(googleAdsAccounts).where(eq(googleAdsAccounts.userId, userId));
   }
 
   async getGoogleAdsAccount(id: string): Promise<GoogleAdsAccount | undefined> {

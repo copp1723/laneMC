@@ -75,16 +75,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Google Ads Account routes
-  app.get("/api/google-ads/accounts", authenticateToken, async (req, res) => {
+  app.get("/api/google-ads/accounts", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const accounts = await storage.getGoogleAdsAccounts();
+      const userId = req.user!.id;
+      let accounts = await storage.getGoogleAdsAccounts(userId);
+      
+      // If no accounts exist, create some sample accounts for development
+      if (accounts.length === 0) {
+        const sampleAccounts = [
+          {
+            userId,
+            customerId: '123-456-7890',
+            name: 'Acme Corp',
+            refreshToken: 'dev_token_1',
+            currency: 'USD',
+            timezone: 'America/New_York'
+          },
+          {
+            userId,
+            customerId: '987-654-3210',
+            name: 'Tech Solutions LLC',
+            refreshToken: 'dev_token_2',
+            currency: 'USD',
+            timezone: 'America/Los_Angeles'
+          },
+          {
+            userId,
+            customerId: '555-123-4567',
+            name: 'Global Marketing Inc',
+            refreshToken: 'dev_token_3',
+            currency: 'USD',
+            timezone: 'America/Chicago'
+          }
+        ];
+        
+        for (const account of sampleAccounts) {
+          await storage.createGoogleAdsAccount(account);
+        }
+        
+        accounts = await storage.getGoogleAdsAccounts(userId);
+      }
+      
       res.json(accounts);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
 
-  app.post("/api/google-ads/accounts/sync", authenticateToken, async (req, res) => {
+  app.post("/api/google-ads/accounts/sync", authenticateToken, async (req: AuthRequest, res) => {
     try {
       // Get accessible customers from Google Ads API
       const customerIds = await googleAdsService.getAccessibleCustomers();
@@ -100,6 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (!existingAccount) {
             await storage.createGoogleAdsAccount({
+              userId: req.user!.id,
               customerId,
               name: customerInfo.name,
               currency: customerInfo.currency,
@@ -112,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const accounts = await storage.getGoogleAdsAccounts();
+      const accounts = await storage.getGoogleAdsAccounts(req.user!.id);
       res.json(accounts);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
