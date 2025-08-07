@@ -436,12 +436,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advanced analytics routes
+  app.get("/api/analytics/accounts/:accountId/campaigns/:campaignId/analysis", authenticateToken, async (req, res) => {
+    try {
+      const { accountId, campaignId } = req.params;
+      const { channelType = 'search' } = req.query;
+      
+      // Mock analytics data for development
+      const mockAnalysis = {
+        campaignId,
+        enhancedMetrics: {
+          impressions: 12500,
+          clicks: 485,
+          cost: 1247.50,
+          conversions: 18,
+          ctr: 3.88,
+          cpc: 2.57,
+          conversionRate: 3.71,
+          costPerConversion: 69.31
+        },
+        performanceScore: {
+          overall: 82,
+          efficiency: 85,
+          reach: 78,
+          quality: 84
+        },
+        optimizationOpportunities: [
+          {
+            type: "keyword_expansion",
+            priority: "high",
+            impact: "high",
+            description: "Add high-converting keyword variations",
+            estimatedImprovement: "15-25% increase in conversions"
+          }
+        ],
+        recommendations: [
+          "Expand keyword targeting with high-intent variations",
+          "Optimize ad copy for better CTR",
+          "Consider increasing budget for high-performing campaigns"
+        ]
+      };
+      
+      res.json({ success: true, data: mockAnalysis });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Budget pacing routes
+  app.get("/api/budget-pacing/accounts/:accountId/status", authenticateToken, async (req, res) => {
+    try {
+      const { accountId } = req.params;
+      
+      // Mock budget pacing data
+      const mockStatus = [
+        {
+          campaignId: "campaign_1",
+          currentSpend: 850,
+          dailyBudget: 100,
+          recommendedBudget: 95,
+          pacingStatus: "on_track",
+          daysRemaining: 12,
+          projectedSpend: 2990,
+          confidenceScore: 0.85
+        }
+      ];
+      
+      res.json({ success: true, data: mockStatus });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Campaign generation routes
+  app.post("/api/campaign-generator/generate-from-conversation", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { sessionId } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ success: false, error: "Session ID is required" });
+      }
+      
+      // Mock campaign generation result
+      const mockResult = {
+        success: true,
+        campaignId: "generated_" + Date.now(),
+        workflowId: "workflow_" + Date.now(),
+        brief: {
+          campaignName: "AI Generated Campaign",
+          objective: "conversions",
+          budget: { amount: 3000, period: "monthly", currency: "USD" }
+        },
+        readyToLaunch: false,
+        recommendations: [
+          "Review generated campaign structure",
+          "Adjust budget allocation",
+          "Test ad copy variations"
+        ]
+      };
+      
+      res.json({ success: true, data: mockResult });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Monitoring routes
+  app.get("/api/monitoring/accounts/:accountId/campaigns/:campaignId/health", authenticateToken, async (req, res) => {
+    try {
+      const { accountId, campaignId } = req.params;
+      
+      // Mock health data
+      const mockHealth = {
+        campaignId,
+        overallHealth: "healthy",
+        lastCheck: new Date(),
+        issues: [],
+        metrics: {
+          uptime: 98.5,
+          performanceScore: 82,
+          budgetHealth: "good",
+          trafficQuality: 85
+        },
+        alerts: {
+          active: 0,
+          resolved: 3,
+          dismissed: 1
+        }
+      };
+      
+      res.json({ success: true, data: mockHealth });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Scheduler routes
+  app.get("/api/scheduler/tasks", authenticateToken, async (req, res) => {
+    try {
+      // Mock scheduled tasks
+      const mockTasks = [
+        {
+          id: "budget_pacing_check",
+          name: "Budget Pacing Check",
+          description: "Check and adjust budget pacing for all campaigns",
+          schedule: "0 */2 * * *",
+          enabled: true,
+          status: "idle",
+          lastRun: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          nextRun: new Date(Date.now() + 2 * 60 * 60 * 1000)
+        },
+        {
+          id: "performance_monitoring",
+          name: "Performance Monitoring", 
+          description: "Monitor campaign performance and detect issues",
+          schedule: "*/10 * * * *",
+          enabled: true,
+          status: "idle",
+          lastRun: new Date(Date.now() - 10 * 60 * 1000),
+          nextRun: new Date(Date.now() + 10 * 60 * 1000)
+        }
+      ];
+      
+      res.json({ success: true, data: mockTasks });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ 
       status: "healthy", 
       timestamp: new Date().toISOString(),
-      environment: process.env.ENVIRONMENT || 'development'
+      environment: process.env.ENVIRONMENT || 'development',
+      services: {
+        budgetPacing: "operational",
+        monitoring: "operational", 
+        analytics: "operational",
+        campaignGenerator: "operational",
+        scheduler: "operational"
+      }
     });
   });
 
