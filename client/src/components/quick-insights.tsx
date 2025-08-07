@@ -15,7 +15,7 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
     <div className="w-80 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="p-6 border-b border-slate-200">
-        <h2 className="text-lg font-semibold text-slate-900">Executive Insights</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Business Impact</h2>
         <p className="text-sm text-slate-500 mt-1">
           {selectedClient ? `${selectedClient.name}` : 'Select a client for insights'}
         </p>
@@ -39,18 +39,18 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
                 </div>
               </CardHeader>
               <CardContent className="pt-0 space-y-3">
-                <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                  <div className="text-sm font-medium text-amber-900">Budget Overspend Risk</div>
-                  <div className="text-xs text-amber-700 mt-1">Search campaigns may exceed monthly target by $8,500</div>
-                  <Button size="sm" className="mt-2 h-7 text-xs">
-                    Review Budget
+                <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="text-sm font-medium text-red-900">🚨 Budget Alert</div>
+                  <div className="text-xs text-red-700 mt-1">Projected overspend: $8,500 this month</div>
+                  <Button size="sm" className="mt-2 h-7 text-xs bg-red-600 hover:bg-red-700">
+                    Fix Now
                   </Button>
                 </div>
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-sm font-medium text-blue-900">Optimization Ready</div>
-                  <div className="text-xs text-blue-700 mt-1">3 campaigns ready for AI optimization</div>
-                  <Button size="sm" variant="outline" className="mt-2 h-7 text-xs">
-                    Optimize Now
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-sm font-medium text-green-900">💡 Revenue Opportunity</div>
+                  <div className="text-xs text-green-700 mt-1">Potential +$23K monthly from 3 campaigns</div>
+                  <Button size="sm" className="mt-2 h-7 text-xs bg-green-600 hover:bg-green-700">
+                    Capture Revenue
                   </Button>
                 </div>
               </CardContent>
@@ -71,7 +71,7 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
                     <div className="text-xs text-slate-600">From keyword expansion</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-green-600">+$23,400</div>
+                    <div className="text-lg font-bold text-green-600">+$23,400</div>
                     <div className="text-xs text-slate-500">Est. monthly</div>
                   </div>
                 </div>
@@ -81,7 +81,7 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
                     <div className="text-xs text-slate-600">From bid optimization</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-blue-600">-$4,200</div>
+                    <div className="text-lg font-bold text-blue-600">-$4,200</div>
                     <div className="text-xs text-slate-500">Monthly CPC</div>
                   </div>
                 </div>

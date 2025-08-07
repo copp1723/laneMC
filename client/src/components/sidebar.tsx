@@ -35,22 +35,22 @@ export default function Sidebar({ selectedClient, onClientChange, activeView = '
   const { user, logout } = useAuth();
 
   return (
-    <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
+    <div className="w-64 bg-slate-900 border-r border-slate-700 flex flex-col">
       {/* Logo and Brand */}
-      <div className="flex items-center justify-between p-6 border-b border-slate-200">
+      <div className="flex items-center justify-between p-6 border-b border-slate-700">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">L</span>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">Lane MCP</h1>
-            <p className="text-xs text-slate-500">Google Ads Platform</p>
+            <h1 className="text-lg font-semibold text-white">Lane MCP</h1>
+            <p className="text-xs text-slate-400">Automation Platform</p>
           </div>
         </div>
       </div>
 
       {/* Client Selector */}
-      <div className="p-4 border-b border-slate-200">
+      <div className="p-4 border-b border-slate-700">
         <ClientSelector onClientChange={onClientChange} />
       </div>
 
@@ -67,8 +67,8 @@ export default function Sidebar({ selectedClient, onClientChange, activeView = '
                   onClick={() => onViewChange?.(item.id)}
                   className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-blue-50 text-primary border-r-2 border-primary'
-                      : 'text-slate-700 hover:bg-slate-100'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-3" />
@@ -81,19 +81,19 @@ export default function Sidebar({ selectedClient, onClientChange, activeView = '
       </nav>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-slate-200">
+      <div className="p-4 border-t border-slate-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center">
-              <span className="text-slate-600 text-sm font-medium">
+            <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center">
+              <span className="text-slate-300 text-sm font-medium">
                 {user?.username?.charAt(0).toUpperCase() || 'U'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">
+              <p className="text-sm font-medium text-white truncate">
                 {user?.username || 'User'}
               </p>
-              <p className="text-xs text-slate-500 capitalize">
+              <p className="text-xs text-slate-400 capitalize">
                 {user?.role || 'User'}
               </p>
             </div>
@@ -102,7 +102,7 @@ export default function Sidebar({ selectedClient, onClientChange, activeView = '
             variant="ghost"
             size="sm"
             onClick={logout}
-            className="text-slate-500 hover:text-slate-700"
+            className="text-slate-400 hover:text-slate-200"
           >
             <LogOut className="w-4 h-4" />
           </Button>

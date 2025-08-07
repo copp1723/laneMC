@@ -116,8 +116,8 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
       <div className="border-b border-slate-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">AI Assistant</h3>
-            <p className="text-sm text-slate-500">Google Ads automation and optimization</p>
+            <h3 className="text-lg font-semibold text-slate-900">Automation Assistant</h3>
+            <p className="text-sm text-slate-500">Campaign optimization & strategy</p>
           </div>
           <div className="flex items-center space-x-2">
             <Badge variant="secondary" className="text-xs">
