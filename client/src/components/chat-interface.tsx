@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useChat } from '@/hooks/use-chat';
-import { MessageCircle, User, Trash2, Send } from 'lucide-react';
+import { MessageCircle, User, Trash2, Send, Rocket } from 'lucide-react';
+import { CampaignBriefGenerator } from './CampaignBriefGenerator';
 import type { GoogleAdsAccount } from '@shared/schema';
 
 interface ChatInterfaceProps {
@@ -250,6 +251,25 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
             </Button>
           ))}
         </div>
+
+        {/* Campaign Brief Generator */}
+        {selectedClient && currentSessionId && messages.length >= 3 && (
+          <div className="mt-6 pt-6 border-t border-slate-200">
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                <Rocket className="w-4 h-4" />
+                Generate Campaign Brief
+              </h3>
+              <p className="text-xs text-slate-600 mt-1">
+                Convert this conversation into a structured campaign brief
+              </p>
+            </div>
+            <CampaignBriefGenerator
+              sessionId={currentSessionId}
+              accountId={selectedClient.id}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
