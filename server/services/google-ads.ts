@@ -450,6 +450,114 @@ class GoogleAdsService {
       );
     }
   }
+
+  // Quality Score and Issue Detection Methods
+  async getQualityScoreMetrics(customerId: string, campaignId: string): Promise<any[]> {
+    if (this.isDevelopmentMode()) {
+      // Mock data for development
+      return [
+        {
+          keywordId: 'mock-keyword-1',
+          keyword: 'toyota dealership',
+          qualityScore: 4,
+          adRelevance: 'BELOW_AVERAGE',
+          landingPageExperience: 'AVERAGE',
+          expectedCtr: 'ABOVE_AVERAGE'
+        },
+        {
+          keywordId: 'mock-keyword-2', 
+          keyword: 'car financing',
+          qualityScore: 7,
+          adRelevance: 'ABOVE_AVERAGE',
+          landingPageExperience: 'ABOVE_AVERAGE',
+          expectedCtr: 'AVERAGE'
+        }
+      ];
+    }
+
+    try {
+      const response = await this.makeRequest(
+        customerId, 
+        `/googleAds/v15/customers/${customerId}/googleAds:searchStream`,
+        'POST',
+        {
+          query: `
+            SELECT 
+              ad_group.id,
+              ad_group_criterion.keyword.text,
+              ad_group_criterion.quality_info.quality_score,
+              ad_group_criterion.quality_info.creative_quality_score,
+              ad_group_criterion.quality_info.landing_page_quality_score,
+              ad_group_criterion.quality_info.search_predicted_ctr
+            FROM ad_group_criterion 
+            WHERE campaign.id = ${campaignId}
+              AND ad_group_criterion.type = KEYWORD
+              AND ad_group_criterion.quality_info.quality_score IS NOT NULL
+          `
+        }
+      );
+
+      return response.results?.map((row: any) => ({
+        keywordId: row.adGroupCriterion?.resourceName,
+        keyword: row.adGroupCriterion?.keyword?.text,
+        qualityScore: row.adGroupCriterion?.qualityInfo?.qualityScore || 1,
+        adRelevance: row.adGroupCriterion?.qualityInfo?.creativeQualityScore || 'UNKNOWN',
+        landingPageExperience: row.adGroupCriterion?.qualityInfo?.landingPageQualityScore || 'UNKNOWN',
+        expectedCtr: row.adGroupCriterion?.qualityInfo?.searchPredictedCtr || 'UNKNOWN'
+      })) || [];
+
+    } catch (error) {
+      console.error('Failed to get quality score metrics:', error);
+      return [];
+    }
+  }
+
+  async getAdDisapprovals(customerId: string, campaignId: string): Promise<any[]> {
+    if (this.isDevelopmentMode()) {
+      // Mock disapproval for development
+      return [
+        {
+          adId: 'mock-ad-1',
+          headline: 'Best Car Deals in Town!',
+          status: 'DISAPPROVED',
+          policyTopic: 'MISLEADING_CONTENT',
+          reason: 'Unsubstantiated claims about being "best"'
+        }
+      ];
+    }
+
+    try {
+      const response = await this.makeRequest(
+        customerId,
+        `/googleAds/v15/customers/${customerId}/googleAds:searchStream`,
+        'POST',
+        {
+          query: `
+            SELECT
+              ad_group_ad.ad.id,
+              ad_group_ad.ad.text_ad.headline1,
+              ad_group_ad.policy_summary.approval_status,
+              ad_group_ad.policy_summary.policy_topic_entries
+            FROM ad_group_ad
+            WHERE campaign.id = ${campaignId}
+              AND ad_group_ad.policy_summary.approval_status = DISAPPROVED
+          `
+        }
+      );
+
+      return response.results?.map((row: any) => ({
+        adId: row.adGroupAd?.ad?.id,
+        headline: row.adGroupAd?.ad?.textAd?.headline1,
+        status: row.adGroupAd?.policySummary?.approvalStatus,
+        policyTopic: row.adGroupAd?.policySummary?.policyTopicEntries?.[0]?.topic || 'UNKNOWN',
+        reason: row.adGroupAd?.policySummary?.policyTopicEntries?.[0]?.type || 'Policy violation'
+      })) || [];
+
+    } catch (error) {
+      console.error('Failed to get ad disapprovals:', error);
+      return [];
+    }
+  }
 }
 
 export const googleAdsService = new GoogleAdsService();

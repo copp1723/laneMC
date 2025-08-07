@@ -8,6 +8,7 @@ import CampaignApprovalModal from '@/components/campaign-approval-modal';
 import EscalationSettings from '@/components/escalation-settings';
 import BudgetPacingCard from '@/components/budget-pacing-card';
 import { BudgetPacingDashboard } from '@/components/BudgetPacingDashboard';
+import { IssueDetectionDashboard } from '@/components/IssueDetectionDashboard';
 import MonitoringCard from '@/components/monitoring-card';
 import SchedulerCard from '@/components/scheduler-card';
 import CampaignGenerationCard from '@/components/campaign-generation-card';
@@ -60,6 +61,18 @@ export default function Dashboard() {
           <div className="flex-1 p-6 flex items-center justify-center">
             <div className="text-center text-gray-500">
               Select a client to view budget pacing
+            </div>
+          </div>
+        );
+      case 'issue-detection':
+        return selectedClient ? (
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+            <IssueDetectionDashboard accountId={selectedClient.id} />
+          </div>
+        ) : (
+          <div className="flex-1 p-6 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              Select a client to view issue detection
             </div>
           </div>
         );

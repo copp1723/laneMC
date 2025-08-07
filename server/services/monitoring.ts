@@ -131,6 +131,19 @@ class MonitoringService {
       for (const campaign of campaigns) {
         await this.monitorCampaign(account, campaign.id);
       }
+
+      // Run comprehensive issue detection
+      try {
+        const { issueDetectionService } = await import('./issue-detection');
+        const issues = await issueDetectionService.detectAllIssues(account.id);
+        const criticalIssues = issues.filter(issue => issue.severity === 'critical');
+        
+        if (criticalIssues.length > 0) {
+          console.log(`🚨 ${criticalIssues.length} critical issues detected for account ${account.id}`);
+        }
+      } catch (error) {
+        console.error(`Issue detection failed for account ${account.id}:`, error);
+      }
     } catch (error) {
       console.error(`Error monitoring account ${account.id}:`, error);
     }
