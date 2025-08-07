@@ -173,7 +173,7 @@ export default function ChatInterface({ selectedClient }: ChatInterfaceProps) {
               <div className={`text-xs text-slate-500 mt-1 ${
                 message.role === 'user' ? 'text-right' : ''
               }`}>
-                {formatTimestamp(message.createdAt!)}
+                {formatTimestamp(message.createdAt?.toString() || '')}
               </div>
             </div>
 
