@@ -3,11 +3,12 @@ import { Pool } from "pg";
 import { eq, and, desc, asc } from "drizzle-orm";
 import {
   users, googleAdsAccounts, campaigns, chatSessions, chatMessages,
-  campaignBriefs, performanceMetrics, budgetPacing,
+  campaignBriefs, performanceMetrics, budgetPacing, escalationSettings,
   type User, type InsertUser, type GoogleAdsAccount, type InsertGoogleAdsAccount,
   type Campaign, type InsertCampaign, type ChatSession, type InsertChatSession,
   type ChatMessage, type InsertChatMessage, type CampaignBrief, type InsertCampaignBrief,
-  type PerformanceMetrics, type InsertPerformanceMetrics, type BudgetPacing, type InsertBudgetPacing
+  type PerformanceMetrics, type InsertPerformanceMetrics, type BudgetPacing, type InsertBudgetPacing,
+  type EscalationSettings, type InsertEscalationSettings
 } from "@shared/schema";
 
 const pool = new Pool({
@@ -56,6 +57,13 @@ export interface IStorage {
   // Budget pacing
   getBudgetPacing(googleAdsAccountId: string, campaignId?: string): Promise<BudgetPacing[]>;
   createBudgetPacing(pacing: InsertBudgetPacing): Promise<BudgetPacing>;
+  
+  // Escalation settings
+  getEscalationSettings(userId: string, googleAdsAccountId?: string): Promise<EscalationSettings[]>;
+  getEscalationSetting(id: string): Promise<EscalationSettings | undefined>;
+  createEscalationSetting(setting: InsertEscalationSettings): Promise<EscalationSettings>;
+  updateEscalationSetting(id: string, updates: Partial<EscalationSettings>): Promise<EscalationSettings | undefined>;
+  deleteEscalationSetting(id: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -235,6 +243,44 @@ export class DbStorage implements IStorage {
   async createBudgetPacing(pacing: InsertBudgetPacing): Promise<BudgetPacing> {
     const result = await db.insert(budgetPacing).values(pacing).returning();
     return result[0];
+  }
+
+  // Escalation settings methods
+  async getEscalationSettings(userId: string, googleAdsAccountId?: string): Promise<EscalationSettings[]> {
+    if (googleAdsAccountId) {
+      return await db.select().from(escalationSettings)
+        .where(and(
+          eq(escalationSettings.userId, userId),
+          eq(escalationSettings.googleAdsAccountId, googleAdsAccountId)
+        ))
+        .orderBy(desc(escalationSettings.createdAt));
+    }
+    
+    return await db.select().from(escalationSettings)
+      .where(eq(escalationSettings.userId, userId))
+      .orderBy(desc(escalationSettings.createdAt));
+  }
+
+  async getEscalationSetting(id: string): Promise<EscalationSettings | undefined> {
+    const result = await db.select().from(escalationSettings).where(eq(escalationSettings.id, id));
+    return result[0];
+  }
+
+  async createEscalationSetting(setting: InsertEscalationSettings): Promise<EscalationSettings> {
+    const result = await db.insert(escalationSettings).values(setting).returning();
+    return result[0];
+  }
+
+  async updateEscalationSetting(id: string, updates: Partial<EscalationSettings>): Promise<EscalationSettings | undefined> {
+    const result = await db.update(escalationSettings)
+      .set({ ...updates, updatedAt: new Date() } as any)
+      .where(eq(escalationSettings.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteEscalationSetting(id: string): Promise<void> {
+    await db.delete(escalationSettings).where(eq(escalationSettings.id, id));
   }
 }
 

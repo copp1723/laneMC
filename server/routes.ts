@@ -210,6 +210,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Escalation settings routes
+  app.get("/api/escalation-settings", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const { accountId } = req.query;
+      const settings = await storage.getEscalationSettings(userId, accountId as string);
+      res.json(settings);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/escalation-settings", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const settingData = {
+        ...req.body,
+        userId
+      };
+      const setting = await storage.createEscalationSetting(settingData);
+      res.status(201).json(setting);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/escalation-settings/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const setting = await storage.updateEscalationSetting(id, updates);
+      
+      if (!setting) {
+        return res.status(404).json({ message: "Escalation setting not found" });
+      }
+      
+      res.json(setting);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/escalation-settings/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteEscalationSetting(id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Chat routes
   app.get("/api/chat/sessions", authenticateToken, async (req: AuthRequest, res) => {
     try {
