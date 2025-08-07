@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: lane-mcp-platform
+    env: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ENVIRONMENT
+        value: production
+    # Environment variables to be set in Render dashboard:
+    # - DATABASE_URL (your PostgreSQL connection string)
+    # - JWT_SECRET_KEY (generate secure random string)
+    # - GOOGLE_ADS_CLIENT_ID
+    # - GOOGLE_ADS_CLIENT_SECRET  
+    # - GOOGLE_ADS_DEVELOPER_TOKEN
+    # - GOOGLE_ADS_REFRESH_TOKEN
+    # - GOOGLE_ADS_LOGIN_CUSTOMER_ID
+    # - OPENROUTER_API_KEY
+    autoDeploy: true
+    healthCheckPath: /api/health
+    disk:
+      name: lane-mcp-disk
+      size: 1GB
+      mount: /opt/render/project/data
