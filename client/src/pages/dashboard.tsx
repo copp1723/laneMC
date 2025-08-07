@@ -5,12 +5,14 @@ import Sidebar from '@/components/sidebar';
 import QuickInsights from '@/components/quick-insights';
 import ChatInterface from '@/components/chat-interface';
 import CampaignApprovalModal from '@/components/campaign-approval-modal';
+import EscalationSettings from '@/components/escalation-settings';
 import type { GoogleAdsAccount } from '@shared/schema';
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedClient, setSelectedClient] = useState<GoogleAdsAccount | null>(null);
+  const [activeView, setActiveView] = useState('chat');
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -35,15 +37,30 @@ export default function Dashboard() {
     return null;
   }
 
+  const renderMainContent = () => {
+    if (activeView === 'escalation') {
+      return <EscalationSettings selectedClient={selectedClient} />;
+    }
+    
+    return (
+      <div className="flex-1 flex overflow-hidden">
+        <QuickInsights selectedClient={selectedClient} />
+        <ChatInterface selectedClient={selectedClient} />
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-screen bg-slate-50">
-      <Sidebar selectedClient={selectedClient} onClientChange={setSelectedClient} />
+      <Sidebar 
+        selectedClient={selectedClient} 
+        onClientChange={setSelectedClient}
+        activeView={activeView}
+        onViewChange={setActiveView}
+      />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 flex overflow-hidden">
-          <QuickInsights selectedClient={selectedClient} />
-          <ChatInterface selectedClient={selectedClient} />
-        </div>
+        {renderMainContent()}
       </div>
       
       <CampaignApprovalModal />

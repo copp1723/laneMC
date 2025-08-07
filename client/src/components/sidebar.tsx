@@ -17,17 +17,19 @@ const navigationItems = [
   { id: 'campaigns', label: 'Campaigns', icon: BarChart3 },
   { id: 'performance', label: 'Performance', icon: TrendingUp },
   { id: 'approvals', label: 'Approvals', icon: CheckCircle },
+  { id: 'escalation', label: 'Escalation', icon: Settings },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 interface SidebarProps {
   selectedClient?: GoogleAdsAccount | null;
   onClientChange?: (client: GoogleAdsAccount | null) => void;
+  activeView?: string;
+  onViewChange?: (view: string) => void;
 }
 
-export default function Sidebar({ selectedClient, onClientChange }: SidebarProps) {
+export default function Sidebar({ selectedClient, onClientChange, activeView = 'chat', onViewChange }: SidebarProps) {
   const { user, logout } = useAuth();
-  const [activeItem, setActiveItem] = useState('chat');
 
   return (
     <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
@@ -54,12 +56,12 @@ export default function Sidebar({ selectedClient, onClientChange }: SidebarProps
         <ul className="space-y-2">
           {navigationItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeItem === item.id;
+            const isActive = activeView === item.id;
             
             return (
               <li key={item.id}>
                 <button
-                  onClick={() => setActiveItem(item.id)}
+                  onClick={() => onViewChange?.(item.id)}
                   className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     isActive
                       ? 'bg-blue-50 text-primary border-r-2 border-primary'

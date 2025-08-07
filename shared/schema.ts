@@ -99,6 +99,19 @@ export const budgetPacing = pgTable("budget_pacing", {
   recommendations: jsonb("recommendations"),
 });
 
+export const escalationSettings = pgTable("escalation_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  googleAdsAccountId: varchar("google_ads_account_id").references(() => googleAdsAccounts.id),
+  type: text("type").notNull(), // budget_pacing, performance_drop, campaign_issue
+  threshold: decimal("threshold", { precision: 5, scale: 2 }), // percentage threshold
+  enabled: boolean("enabled").default(true),
+  notificationMethods: jsonb("notification_methods"), // email, sms, slack, etc.
+  escalationRules: jsonb("escalation_rules"), // time-based escalation rules
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertGoogleAdsAccountSchema = createInsertSchema(googleAdsAccounts).omit({ id: true, createdAt: true });
@@ -108,6 +121,7 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ i
 export const insertCampaignBriefSchema = createInsertSchema(campaignBriefs).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPerformanceMetricsSchema = createInsertSchema(performanceMetrics).omit({ id: true });
 export const insertBudgetPacingSchema = createInsertSchema(budgetPacing).omit({ id: true });
+export const insertEscalationSettingsSchema = createInsertSchema(escalationSettings).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -126,3 +140,5 @@ export type PerformanceMetrics = typeof performanceMetrics.$inferSelect;
 export type InsertPerformanceMetrics = z.infer<typeof insertPerformanceMetricsSchema>;
 export type BudgetPacing = typeof budgetPacing.$inferSelect;
 export type InsertBudgetPacing = z.infer<typeof insertBudgetPacingSchema>;
+export type EscalationSettings = typeof escalationSettings.$inferSelect;
+export type InsertEscalationSettings = z.infer<typeof insertEscalationSettingsSchema>;
