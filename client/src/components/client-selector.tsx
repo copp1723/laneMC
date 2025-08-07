@@ -137,19 +137,13 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
           <SelectContent className="bg-slate-100 border-slate-300">
             {accounts.map((account) => (
               <SelectItem key={account.id} value={account.id} className="text-slate-900 hover:bg-slate-200 focus:bg-slate-200">
-                <div className="flex items-center justify-between w-full">
-                  <div>
-                    <div className="font-medium">{account.name}</div>
-                    <div className="text-xs text-slate-600">
-                      ID: {account.customerId}
-                      {account.currency && ` • ${account.currency}`}
-                    </div>
+                <div className="w-full">
+                  <div className="font-medium truncate">{account.name}</div>
+                  <div className="text-xs text-slate-600 truncate">
+                    ID: {account.customerId}
+                    {account.currency && ` • ${account.currency}`}
+                    {account.isActive && ' • Active'}
                   </div>
-                  {account.isActive && (
-                    <Badge variant="secondary" className="ml-2 text-xs bg-slate-300 text-slate-700">
-                      Active
-                    </Badge>
-                  )}
                 </div>
               </SelectItem>
             ))}
