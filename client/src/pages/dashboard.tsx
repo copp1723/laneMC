@@ -6,6 +6,10 @@ import QuickInsights from '@/components/quick-insights';
 import ChatInterface from '@/components/chat-interface';
 import CampaignApprovalModal from '@/components/campaign-approval-modal';
 import EscalationSettings from '@/components/escalation-settings';
+import BudgetPacingCard from '@/components/budget-pacing-card';
+import MonitoringCard from '@/components/monitoring-card';
+import SchedulerCard from '@/components/scheduler-card';
+import CampaignGenerationCard from '@/components/campaign-generation-card';
 import type { GoogleAdsAccount } from '@shared/schema';
 
 export default function Dashboard() {
@@ -13,6 +17,7 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [selectedClient, setSelectedClient] = useState<GoogleAdsAccount | null>(null);
   const [activeView, setActiveView] = useState('chat');
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -41,11 +46,30 @@ export default function Dashboard() {
     if (activeView === 'escalation') {
       return <EscalationSettings selectedClient={selectedClient} />;
     }
+
+    if (activeView === 'automation') {
+      return (
+        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <BudgetPacingCard selectedClient={selectedClient} />
+            <MonitoringCard selectedClient={selectedClient} />
+            <SchedulerCard />
+            <CampaignGenerationCard 
+              selectedClient={selectedClient} 
+              currentSessionId={currentSessionId}
+            />
+          </div>
+        </div>
+      );
+    }
     
     return (
       <div className="flex-1 flex overflow-hidden">
         <QuickInsights selectedClient={selectedClient} />
-        <ChatInterface selectedClient={selectedClient} />
+        <ChatInterface 
+          selectedClient={selectedClient} 
+          onSessionChange={setCurrentSessionId}
+        />
       </div>
     );
   };

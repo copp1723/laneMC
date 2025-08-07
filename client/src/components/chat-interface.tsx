@@ -8,6 +8,7 @@ import type { GoogleAdsAccount } from '@shared/schema';
 
 interface ChatInterfaceProps {
   selectedClient?: GoogleAdsAccount | null;
+  onSessionChange?: (sessionId: string | null) => void;
 }
 
 const quickActions = [
@@ -17,7 +18,7 @@ const quickActions = [
   { id: 'budget', label: 'Budget recommendations', action: 'budget-recommendations' },
 ];
 
-export default function ChatInterface({ selectedClient }: ChatInterfaceProps) {
+export default function ChatInterface({ selectedClient, onSessionChange }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -29,6 +30,11 @@ export default function ChatInterface({ selectedClient }: ChatInterfaceProps) {
     sendMessage,
     currentSessionId,
   } = useChat({ selectedClient });
+
+  // Notify parent when session changes
+  useEffect(() => {
+    onSessionChange?.(currentSessionId);
+  }, [currentSessionId, onSessionChange]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

@@ -8,12 +8,15 @@ import {
   TrendingUp, 
   CheckCircle, 
   Settings,
-  LogOut
+  LogOut,
+  Bot,
+  Zap
 } from 'lucide-react';
 import type { GoogleAdsAccount } from '@shared/schema';
 
 const navigationItems = [
   { id: 'chat', label: 'AI Chat', icon: MessageSquare, active: true },
+  { id: 'automation', label: 'Automation', icon: Zap },
   { id: 'campaigns', label: 'Campaigns', icon: BarChart3 },
   { id: 'performance', label: 'Performance', icon: TrendingUp },
   { id: 'approvals', label: 'Approvals', icon: CheckCircle },

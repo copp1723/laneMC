@@ -8,7 +8,7 @@ interface UseChatProps {
 }
 
 export function useChat({ selectedClient }: UseChatProps) {
-  const [currentSessionId, setCurrentSessionId] = useState<string>('');
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const queryClient = useQueryClient();

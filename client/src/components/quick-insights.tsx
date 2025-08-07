@@ -75,6 +75,20 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
+  // Fetch budget pacing data
+  const { data: budgetStatus } = useQuery({
+    queryKey: ['/api/budget-pacing/accounts', selectedClient?.id, 'status'],
+    enabled: !!selectedClient,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch campaign health data
+  const { data: healthData } = useQuery({
+    queryKey: ['/api/monitoring/accounts', selectedClient?.id, 'health'],
+    enabled: !!selectedClient,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
