@@ -25,13 +25,14 @@ export default function EscalationSettingsComponent({ selectedClient }: Escalati
   const { data: settings = [], isLoading } = useQuery({
     queryKey: ['/api/escalation-settings', selectedClient?.id],
     queryFn: async () => {
-      const response = await apiRequest(`/api/escalation-settings${selectedClient ? `?accountId=${selectedClient.id}` : ''}`);
-      return Array.isArray(response) ? response : [];
+      const response = await apiRequest('GET', `/api/escalation-settings${selectedClient ? `?accountId=${selectedClient.id}` : ''}`);
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/escalation-settings', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/escalation-settings', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/escalation-settings'] });
       setShowNewSettingForm(false);
@@ -44,7 +45,7 @@ export default function EscalationSettingsComponent({ selectedClient }: Escalati
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => 
-      apiRequest(`/api/escalation-settings/${id}`, 'PUT', data),
+      apiRequest('PUT', `/api/escalation-settings/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/escalation-settings'] });
       toast({ title: 'Escalation setting updated successfully' });
@@ -55,7 +56,7 @@ export default function EscalationSettingsComponent({ selectedClient }: Escalati
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/escalation-settings/${id}`, 'DELETE'),
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/escalation-settings/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/escalation-settings'] });
       toast({ title: 'Escalation setting deleted successfully' });
@@ -264,11 +265,13 @@ export default function EscalationSettingsComponent({ selectedClient }: Escalati
                       {setting.notificationMethods && typeof setting.notificationMethods === 'object' && (
                         <div className="flex items-center space-x-2 mb-1">
                           <span>Notifications:</span>
-                          {Object.entries(setting.notificationMethods as any).filter(([_, enabled]) => enabled).map(([method]) => (
-                            <Badge key={method} variant="outline" className="text-xs">
-                              {method}
-                            </Badge>
-                          ))}
+                          {Object.entries(setting.notificationMethods as Record<string, boolean>)
+                            .filter(([_, enabled]) => enabled)
+                            .map(([method]) => (
+                              <Badge key={method} variant="outline" className="text-xs">
+                                {method}
+                              </Badge>
+                            ))}
                         </div>
                       )}
                     </div>
