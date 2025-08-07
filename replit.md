@@ -9,7 +9,7 @@ Lane MCP is an AI-powered Google Ads automation platform designed for agencies t
 ## User Preferences
 
 - **Communication Style**: Simple, everyday language
-- **UI Design**: Clean, minimalistic, executive-focused interface with subtle professional styling
+- **UI Design**: Clean, minimalistic, executive-focused interface with professional grey color scheme and optimized text layouts
 - **No Robot Icons**: Removed robotic imagery, replaced with professional message icons
 - **Focus on Value**: Emphasize actionable insights over traditional analytics
 - **Information Density**: Avoid information overload, prioritize tangible business value
