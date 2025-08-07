@@ -131,12 +131,12 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
         </div>
       ) : (
         <Select value={selectedClientId} onValueChange={handleClientChange}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full bg-slate-200 border-slate-300 text-slate-900 hover:bg-slate-100 focus:ring-slate-400">
             <SelectValue placeholder="Select client account" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-slate-100 border-slate-300">
             {accounts.map((account) => (
-              <SelectItem key={account.id} value={account.id}>
+              <SelectItem key={account.id} value={account.id} className="text-slate-900 hover:bg-slate-200 focus:bg-slate-200">
                 <div className="flex items-center justify-between w-full">
                   <div>
                     <div className="font-medium">{account.name}</div>
@@ -146,7 +146,7 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
                     </div>
                   </div>
                   {account.isActive && (
-                    <Badge variant="secondary" className="ml-2 text-xs">
+                    <Badge variant="secondary" className="ml-2 text-xs bg-slate-300 text-slate-700">
                       Active
                     </Badge>
                   )}
