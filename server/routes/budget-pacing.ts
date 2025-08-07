@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { budgetPacingService } from '../services/budget-pacing';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../services/auth';
 
 const router = Router();
 

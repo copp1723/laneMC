@@ -5,6 +5,7 @@ import { authenticateToken, hashPassword, comparePassword, generateToken, AuthRe
 import { storage } from "./storage";
 import { googleAdsService } from "./services/google-ads";
 import { openRouterService } from "./services/openrouter";
+import { budgetPacingService } from "./services/budget-pacing";
 import { insertUserSchema, insertChatSessionSchema, insertChatMessageSchema, insertCampaignBriefSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {

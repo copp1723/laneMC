@@ -146,7 +146,7 @@ class BudgetPacingService {
 
       // Get campaign details for budget information
       const campaigns = await googleAdsService.getCampaigns(account.customerId);
-      const campaign = campaigns.find(c => c.id === campaignId);
+      const campaign = campaigns.find(c => c.id === campaignId.toString());
       
       if (!campaign) {
         throw new Error(`Campaign ${campaignId} not found`);
@@ -199,11 +199,15 @@ class BudgetPacingService {
         googleAdsAccountId: account.id,
         campaignId,
         date: new Date(),
-        currentSpend: result.currentSpend,
-        projectedSpend: result.projectedSpend,
+        actualSpend: result.currentSpend.toString(),
+        budgetTarget: monthlyBudget.toString(),
         pacingStatus: result.pacingStatus,
-        adjustmentFactor: result.adjustmentFactor,
-        recommendedBudget: result.recommendedBudget
+        recommendations: {
+          adjustmentFactor: result.adjustmentFactor,
+          recommendedBudget: result.recommendedBudget,
+          projectedSpend: result.projectedSpend,
+          confidenceScore: result.confidenceScore
+        }
       });
 
       return result;
