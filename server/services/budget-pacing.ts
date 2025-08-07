@@ -60,12 +60,23 @@ class BudgetPacingService {
     atRiskThreshold: 0.90,   // 90% of budget with time remaining
   };
 
-  // ML model parameters (simplified for now)
-  private mlParams = {
-    seasonalityWeight: 0.2,
-    trendWeight: 0.3,
-    volatilityWeight: 0.2,
-    historicalWeight: 0.3
+  // Intelligent pacing parameters
+  private pacingParams = {
+    // Adjustment factors for different scenarios
+    weekendMultiplier: 0.7,      // Reduce spend on weekends
+    monthEndAggression: 1.3,     // Increase spend near month end if under-pacing
+    seasonalityBuffer: 0.15,     // 15% buffer for seasonal variations
+    volatilityThreshold: 0.25,   // Trigger adjustments if 25% off pace
+    
+    // Learning parameters
+    historicalWeight: 0.4,       // Weight of historical performance
+    trendWeight: 0.3,           // Weight of recent trend analysis  
+    targetWeight: 0.3,          // Weight of target achievement
+    
+    // Safety parameters
+    maxDailyIncrease: 1.5,      // Never increase budget more than 50%
+    maxDailyDecrease: 0.7,      // Never decrease budget more than 30%
+    emergencyPauseThreshold: 0.95 // Pause at 95% of monthly budget
   };
 
   async startMonitoring(): Promise<void> {
