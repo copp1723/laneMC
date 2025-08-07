@@ -7,6 +7,7 @@ import { googleAdsService } from "./services/google-ads";
 import { openRouterService } from "./services/openrouter";
 import { budgetPacingService } from "./services/budget-pacing";
 import { issueDetectionService } from "./services/issue-detection";
+import { campaignBriefGeneratorService } from "./services/campaign-brief-generator";
 import { insertUserSchema, insertChatSessionSchema, insertChatMessageSchema, insertCampaignBriefSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -490,6 +491,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Campaign Brief Generation routes
+  app.post("/api/campaign-brief/generate", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { sessionId, accountId } = req.body;
+      
+      if (!sessionId || !accountId) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Session ID and Account ID are required' 
+        });
+      }
+
+      // Get chat messages for the session
+      const messages = await storage.getChatMessages(sessionId);
+      
+      const result = await campaignBriefGeneratorService.generateFromConversation(
+        sessionId,
+        messages,
+        accountId
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Campaign brief generation failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  });
+
+  app.post("/api/campaign-brief/:briefId/refine", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { briefId } = req.params;
+      const { feedback, requestedChanges } = req.body;
+
+      const result = await campaignBriefGeneratorService.reviewAndRefineBreif(
+        briefId,
+        feedback || '',
+        requestedChanges || []
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Brief refinement failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  });
+
+  app.post("/api/campaigns/create-from-brief", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { briefId, accountId } = req.body;
+      
+      if (!briefId || !accountId) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Brief ID and Account ID are required' 
+        });
+      }
+
+      // Get the campaign brief
+      const brief = await storage.getCampaignBrief(briefId);
+      if (!brief) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'Campaign brief not found' 
+        });
+      }
+
+      // Get the Google Ads account
+      const account = await storage.getGoogleAdsAccount(accountId);
+      if (!account) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'Google Ads account not found' 
+        });
+      }
+
+      // Create campaign structure from brief
+      const campaignData = {
+        name: brief.title,
+        type: 'SEARCH',
+        budget: parseFloat(brief.budget || '100'),
+        bidStrategy: 'MAXIMIZE_CLICKS',
+        keywords: brief.keywords ? brief.keywords.split(', ') : [],
+        adGroups: [{
+          name: 'Ad Group 1',
+          ads: brief.adCopy ? [brief.adCopy] : []
+        }],
+        targetLocations: brief.targetAudience ? [brief.targetAudience] : []
+      };
+
+      // Create campaign via Google Ads API
+      const campaignId = await googleAdsService.createCampaign(
+        account.customerId,
+        campaignData
+      );
+
+      // Save campaign to database
+      const campaign = await storage.createCampaign({
+        googleAdsAccountId: accountId,
+        googleCampaignId: campaignId,
+        name: brief.title,
+        type: 'SEARCH',
+        status: 'PAUSED', // Start paused for safety
+        budget: brief.budget,
+        keywords: { primary: campaignData.keywords },
+        adGroups: campaignData.adGroups
+      });
+
+      // Update brief status to approved
+      // Note: would need to add updateCampaignBrief method to storage
+
+      res.json({ 
+        success: true, 
+        campaignId: campaign.id,
+        googleCampaignId: campaignId
+      });
+
+    } catch (error: any) {
+      console.error('Campaign creation from brief failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
     }
   });
 

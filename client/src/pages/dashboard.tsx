@@ -9,6 +9,7 @@ import EscalationSettings from '@/components/escalation-settings';
 import BudgetPacingCard from '@/components/budget-pacing-card';
 import { BudgetPacingDashboard } from '@/components/BudgetPacingDashboard';
 import { IssueDetectionDashboard } from '@/components/IssueDetectionDashboard';
+import { CampaignBriefGenerator } from '@/components/CampaignBriefGenerator';
 import MonitoringCard from '@/components/monitoring-card';
 import SchedulerCard from '@/components/scheduler-card';
 import CampaignGenerationCard from '@/components/campaign-generation-card';
@@ -96,6 +97,32 @@ export default function Dashboard() {
         return <Performance />;
       case 'approvals':
         return <Approvals />;
+      case 'campaign-briefs':
+        return (
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">Campaign Brief Generator</h1>
+              <p className="text-gray-600 mt-2">
+                Transform natural language conversations into structured Google Ads campaigns
+              </p>
+            </div>
+            {selectedClient && currentSessionId ? (
+              <div className="max-w-4xl">
+                {/* Campaign Brief Generator Component */}
+                <div className="bg-white rounded-lg border p-6">
+                  <CampaignBriefGenerator
+                    sessionId={currentSessionId}
+                    accountId={selectedClient.id}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-12">
+                Select a client and start a conversation to generate campaign briefs
+              </div>
+            )}
+          </div>
+        );
       case 'settings':
         return <Settings />;
       default:
