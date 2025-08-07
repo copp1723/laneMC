@@ -302,15 +302,153 @@ class GoogleAdsService {
       budget: number;
       targetLocations?: string[];
       keywords?: string[];
+      bidStrategy?: string;
     }
   ): Promise<string> {
     if (this.isMockMode) {
       return 'mock_campaign_id_' + Date.now();
     }
 
-    // Implementation for creating actual campaigns would go here
-    // This is a complex operation that requires proper campaign structure
-    throw new Error('Campaign creation not implemented in this MVP');
+    // Create campaign budget first
+    const budgetId = await this.createCampaignBudget(customerId, campaignData.budget);
+    
+    // Create the campaign
+    const campaign = {
+      operations: [
+        {
+          create: {
+            name: campaignData.name,
+            advertisingChannelType: this.mapCampaignType(campaignData.type),
+            status: 'PAUSED', // Start paused for review
+            campaignBudget: `customers/${customerId}/campaignBudgets/${budgetId}`,
+            bidStrategy: this.mapBidStrategy(campaignData.bidStrategy || 'MAXIMIZE_CLICKS'),
+            geoTargetTypeSetting: {
+              positiveGeoTargetType: 'PRESENCE_OR_INTEREST',
+              negativeGeoTargetType: 'PRESENCE'
+            }
+          }
+        }
+      ]
+    };
+
+    const response = await this.makeRequest(
+      `customers/${customerId}/campaigns:mutate`,
+      campaign,
+      customerId
+    );
+
+    if (response.results && response.results.length > 0) {
+      const campaignResourceName = response.results[0].resourceName;
+      const campaignId = campaignResourceName.split('/').pop();
+      
+      // Add location targeting if specified
+      if (campaignData.targetLocations && campaignData.targetLocations.length > 0) {
+        await this.addLocationTargeting(customerId, campaignId, campaignData.targetLocations);
+      }
+      
+      return campaignId;
+    }
+
+    throw new Error('Failed to create campaign');
+  }
+
+  private async createCampaignBudget(customerId: string, budgetAmount: number): Promise<string> {
+    const budget = {
+      operations: [
+        {
+          create: {
+            name: `Budget_${Date.now()}`,
+            amountMicros: Math.round(budgetAmount * 1000000), // Convert to micros
+            deliveryMethod: 'STANDARD'
+          }
+        }
+      ]
+    };
+
+    const response = await this.makeRequest(
+      `customers/${customerId}/campaignBudgets:mutate`,
+      budget,
+      customerId
+    );
+
+    if (response.results && response.results.length > 0) {
+      const budgetResourceName = response.results[0].resourceName;
+      return budgetResourceName.split('/').pop();
+    }
+
+    throw new Error('Failed to create campaign budget');
+  }
+
+  private mapCampaignType(type: string): string {
+    const typeMap: { [key: string]: string } = {
+      'search': 'SEARCH',
+      'display': 'DISPLAY',
+      'shopping': 'SHOPPING',
+      'video': 'VIDEO',
+      'discovery': 'DISCOVERY',
+      'local': 'LOCAL',
+      'smart': 'SMART'
+    };
+    return typeMap[type.toLowerCase()] || 'SEARCH';
+  }
+
+  private mapBidStrategy(strategy: string): any {
+    const strategyMap: { [key: string]: any } = {
+      'MAXIMIZE_CLICKS': { maximizeClicks: {} },
+      'MAXIMIZE_CONVERSIONS': { maximizeConversions: {} },
+      'TARGET_CPA': { targetCpa: { targetCpaMicros: 5000000 } }, // $5 default
+      'TARGET_ROAS': { targetRoas: { targetRoas: 4.0 } }, // 400% default
+      'MANUAL_CPC': { manualCpc: { enhancedCpcEnabled: true } }
+    };
+    return strategyMap[strategy] || strategyMap['MAXIMIZE_CLICKS'];
+  }
+
+  private async addLocationTargeting(customerId: string, campaignId: string, locations: string[]): Promise<void> {
+    // Implementation for adding geo-targeting
+    // This would require location criteria mapping
+    console.log(`Adding location targeting for campaign ${campaignId}:`, locations);
+  }
+
+  async updateCampaignBudget(customerId: string, campaignId: string, newBudget: number): Promise<void> {
+    if (this.isMockMode) {
+      console.log(`Mock: Updated campaign ${campaignId} budget to $${newBudget}`);
+      return;
+    }
+
+    // Get campaign budget resource name first
+    const campaignQuery = `
+      SELECT campaign.campaign_budget
+      FROM campaign 
+      WHERE campaign.id = ${campaignId}
+    `;
+
+    const campaignResponse = await this.makeRequest(
+      `customers/${customerId}/googleAds:search`,
+      { query: campaignQuery },
+      customerId
+    );
+
+    if (campaignResponse.results && campaignResponse.results.length > 0) {
+      const budgetResourceName = campaignResponse.results[0].campaign.campaignBudget;
+      
+      const budgetUpdate = {
+        operations: [
+          {
+            update: {
+              resourceName: budgetResourceName,
+              amountMicros: Math.round(newBudget * 1000000)
+            },
+            updateMask: 'amount_micros'
+          }
+        ]
+      };
+
+      await this.makeRequest(
+        `customers/${customerId}/campaignBudgets:mutate`,
+        budgetUpdate,
+        customerId
+      );
+    }
   }
 }
 

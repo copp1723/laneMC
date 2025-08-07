@@ -26,6 +26,7 @@ export interface IStorage {
   
   // Google Ads Account management
   getGoogleAdsAccounts(userId: string): Promise<GoogleAdsAccount[]>;
+  getAllGoogleAdsAccounts(): Promise<GoogleAdsAccount[]>;
   getGoogleAdsAccount(id: string): Promise<GoogleAdsAccount | undefined>;
   getGoogleAdsAccountByCustomerId(customerId: string): Promise<GoogleAdsAccount | undefined>;
   createGoogleAdsAccount(account: InsertGoogleAdsAccount): Promise<GoogleAdsAccount>;
@@ -57,10 +58,12 @@ export interface IStorage {
   // Budget pacing
   getBudgetPacing(googleAdsAccountId: string, campaignId?: string): Promise<BudgetPacing[]>;
   createBudgetPacing(pacing: InsertBudgetPacing): Promise<BudgetPacing>;
+  updateBudgetPacing(id: string, updates: Partial<BudgetPacing>): Promise<BudgetPacing | undefined>;
   
   // Escalation settings
   getEscalationSettings(userId: string, googleAdsAccountId?: string): Promise<EscalationSettings[]>;
   getEscalationSetting(id: string): Promise<EscalationSettings | undefined>;
+  getEscalationSettingsByCampaign(campaignId: string): Promise<EscalationSettings[]>;
   createEscalationSetting(setting: InsertEscalationSettings): Promise<EscalationSettings>;
   updateEscalationSetting(id: string, updates: Partial<EscalationSettings>): Promise<EscalationSettings | undefined>;
   deleteEscalationSetting(id: string): Promise<void>;
@@ -91,6 +94,10 @@ export class DbStorage implements IStorage {
   // Google Ads Account methods
   async getGoogleAdsAccounts(userId: string): Promise<GoogleAdsAccount[]> {
     return await db.select().from(googleAdsAccounts).where(eq(googleAdsAccounts.userId, userId));
+  }
+
+  async getAllGoogleAdsAccounts(): Promise<GoogleAdsAccount[]> {
+    return await db.select().from(googleAdsAccounts);
   }
 
   async getGoogleAdsAccount(id: string): Promise<GoogleAdsAccount | undefined> {
@@ -245,6 +252,14 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
+  async updateBudgetPacing(id: string, updates: Partial<BudgetPacing>): Promise<BudgetPacing | undefined> {
+    const result = await db.update(budgetPacing)
+      .set({ ...updates, updatedAt: new Date() } as any)
+      .where(eq(budgetPacing.id, id))
+      .returning();
+    return result[0];
+  }
+
   // Escalation settings methods
   async getEscalationSettings(userId: string, googleAdsAccountId?: string): Promise<EscalationSettings[]> {
     if (googleAdsAccountId) {
@@ -264,6 +279,12 @@ export class DbStorage implements IStorage {
   async getEscalationSetting(id: string): Promise<EscalationSettings | undefined> {
     const result = await db.select().from(escalationSettings).where(eq(escalationSettings.id, id));
     return result[0];
+  }
+
+  async getEscalationSettingsByCampaign(campaignId: string): Promise<EscalationSettings[]> {
+    return await db.select().from(escalationSettings)
+      .where(eq(escalationSettings.campaignId, campaignId))
+      .orderBy(desc(escalationSettings.createdAt));
   }
 
   async createEscalationSetting(setting: InsertEscalationSettings): Promise<EscalationSettings> {

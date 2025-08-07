@@ -126,6 +126,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Campaign management routes
+  app.post("/api/google-ads/campaigns", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { accountId, campaignData } = req.body;
+      
+      const account = await storage.getGoogleAdsAccount(accountId);
+      if (!account) {
+        return res.status(404).json({ message: "Google Ads account not found" });
+      }
+
+      // Create campaign in Google Ads
+      const googleCampaignId = await googleAdsService.createCampaign(
+        account.customerId,
+        campaignData
+      );
+
+      // Save campaign to database
+      const campaign = await storage.createCampaign({
+        googleAdsAccountId: accountId,
+        googleCampaignId,
+        name: campaignData.name,
+        type: campaignData.type.toUpperCase(),
+        budget: campaignData.budget,
+        bidStrategy: campaignData.bidStrategy,
+        targetLocations: campaignData.targetLocations,
+        keywords: campaignData.keywords,
+      });
+
+      res.json({ 
+        message: "Campaign created successfully",
+        campaign: {
+          id: campaign.id,
+          googleCampaignId,
+          name: campaign.name,
+          status: 'PAUSED' // Campaigns start paused for review
+        }
+      });
+    } catch (error: any) {
+      console.error('Campaign creation error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/google-ads/campaigns/:campaignId/budget", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { campaignId } = req.params;
+      const { budget } = req.body;
+      
+      const campaign = await storage.getCampaign(campaignId);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      const account = await storage.getGoogleAdsAccount(campaign.googleAdsAccountId!);
+      if (!account) {
+        return res.status(404).json({ message: "Google Ads account not found" });
+      }
+
+      // Update budget in Google Ads
+      if (campaign.googleCampaignId) {
+        await googleAdsService.updateCampaignBudget(
+          account.customerId,
+          campaign.googleCampaignId,
+          budget
+        );
+      }
+
+      // Update campaign in database
+      await storage.updateCampaign(campaignId, { budget });
+
+      res.json({ 
+        message: "Campaign budget updated successfully",
+        newBudget: budget
+      });
+    } catch (error: any) {
+      console.error('Budget update error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/google-ads/accounts/sync", authenticateToken, async (req: AuthRequest, res) => {
     try {
       // Get accessible customers from Google Ads API
