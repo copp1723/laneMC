@@ -131,33 +131,60 @@ class BudgetPacingService {
 
   async checkCampaignBudget(account: GoogleAdsAccount, campaignId: string): Promise<PacingResult> {
     try {
-      // Get performance metrics
-      const metrics = await googleAdsService.getPerformanceMetrics(
+      // Get performance metrics for analysis
+      const currentMetrics = await googleAdsService.getPerformanceMetrics(
         account.customerId, 
         campaignId, 
         'THIS_MONTH'
       );
 
-      // Calculate current metrics
-      const currentSpend = metrics.cost;
+      const historicalMetrics = await googleAdsService.getPerformanceMetrics(
+        account.customerId, 
+        campaignId, 
+        'LAST_30_DAYS'
+      );
+
+      // Get campaign details for budget information
+      const campaigns = await googleAdsService.getCampaigns(account.customerId);
+      const campaign = campaigns.find(c => c.id === campaignId);
+      
+      if (!campaign) {
+        throw new Error(`Campaign ${campaignId} not found`);
+      }
+
+      const monthlyBudget = parseFloat(campaign.budget) || 3000; // Default fallback
+      const currentSpend = currentMetrics.cost;
+      
+      // Calculate time factors
       const daysRemaining = this.calculateDaysRemainingInMonth();
       const daysElapsed = this.getDaysElapsedInMonth();
+      const totalDaysInMonth = daysElapsed + daysRemaining;
       
-      // Get budget information (simplified - would come from campaign details)
-      const monthlyBudget = 3000; // This should come from actual campaign budget
-      const dailyBudget = monthlyBudget / 30;
-
-      // Calculate pacing
-      const pacingResult = this.calculatePacing(
+      // Calculate intelligent pacing
+      const pacingAnalysis = this.calculateIntelligentPacing({
         currentSpend,
         monthlyBudget,
         daysElapsed,
         daysRemaining,
-        PacingStrategy.LINEAR // This should come from campaign settings
-      );
+        totalDaysInMonth,
+        currentMetrics,
+        historicalMetrics,
+        campaign
+      });
+
+      const result: PacingResult = {
+        currentSpend,
+        dailyBudget: monthlyBudget / totalDaysInMonth,
+        recommendedBudget: pacingAnalysis.recommendedDailyBudget,
+        pacingStatus: pacingAnalysis.status,
+        daysRemaining,
+        projectedSpend: pacingAnalysis.projectedSpend,
+        adjustmentFactor: pacingAnalysis.adjustmentFactor,
+        confidenceScore: pacingAnalysis.confidenceScore
+      };
 
       // Check for alerts
-      const alerts = this.checkBudgetAlerts(account, campaignId, pacingResult, monthlyBudget);
+      const alerts = this.checkBudgetAlerts(account, campaignId, result, monthlyBudget);
 
       // Process alerts
       for (const alert of alerts) {
@@ -165,24 +192,129 @@ class BudgetPacingService {
       }
 
       // Store in history
-      this.updatePacingHistory(campaignId, pacingResult);
+      this.updatePacingHistory(campaignId, result);
 
       // Save budget pacing record
-      await storage.updateBudgetPacing({
+      await storage.createBudgetPacing({
         googleAdsAccountId: account.id,
         campaignId,
-        currentSpend: pacingResult.currentSpend,
-        projectedSpend: pacingResult.projectedSpend,
-        pacingStatus: pacingResult.pacingStatus,
-        lastCheck: new Date(),
-        adjustmentFactor: pacingResult.adjustmentFactor
+        date: new Date(),
+        currentSpend: result.currentSpend,
+        projectedSpend: result.projectedSpend,
+        pacingStatus: result.pacingStatus,
+        adjustmentFactor: result.adjustmentFactor,
+        recommendedBudget: result.recommendedBudget
       });
 
-      return pacingResult;
+      return result;
     } catch (error) {
       console.error(`Error checking budget for campaign ${campaignId}:`, error);
       throw error;
     }
+  }
+
+  // Intelligent budget pacing calculation with machine learning approach
+  private calculateIntelligentPacing(params: {
+    currentSpend: number;
+    monthlyBudget: number;
+    daysElapsed: number;
+    daysRemaining: number;
+    totalDaysInMonth: number;
+    currentMetrics: any;
+    historicalMetrics: any;
+    campaign: any;
+  }) {
+    const {
+      currentSpend,
+      monthlyBudget,
+      daysElapsed,
+      daysRemaining,
+      totalDaysInMonth,
+      currentMetrics,
+      historicalMetrics
+    } = params;
+
+    // Calculate basic pacing metrics
+    const expectedSpendRatio = daysElapsed / totalDaysInMonth;
+    const expectedSpend = monthlyBudget * expectedSpendRatio;
+    const actualSpendRatio = currentSpend / monthlyBudget;
+    const dailySpendRate = currentSpend / Math.max(daysElapsed, 1);
+    
+    // Project spend based on current rate
+    const linearProjectedSpend = currentSpend + (dailySpendRate * daysRemaining);
+    
+    // Calculate variance from expected pace
+    const spendVariance = (currentSpend - expectedSpend) / expectedSpend;
+    
+    // Apply intelligent adjustments
+    let adjustmentFactor = 1.0;
+    let confidenceScore = 0.8;
+    
+    // Weekend adjustment (reduce spend on weekends)
+    const isWeekend = this.isWeekend();
+    if (isWeekend) {
+      adjustmentFactor *= this.pacingParams.weekendMultiplier;
+    }
+    
+    // Month-end acceleration (if under-spending near month end)
+    const monthProgressRatio = daysElapsed / totalDaysInMonth;
+    if (monthProgressRatio > 0.75 && spendVariance < -0.1) {
+      adjustmentFactor *= this.pacingParams.monthEndAggression;
+      confidenceScore -= 0.1; // Lower confidence for aggressive adjustments
+    }
+    
+    // Historical performance weighting
+    if (historicalMetrics && historicalMetrics.cost > 0) {
+      const historicalDailyRate = historicalMetrics.cost / 30; // Assume 30-day historical
+      const currentDailyRate = dailySpendRate;
+      const performanceRatio = currentDailyRate / historicalDailyRate;
+      
+      // Adjust based on performance trend
+      if (performanceRatio > 1.2) {
+        adjustmentFactor *= 0.9; // Slow down if spending faster than historical
+      } else if (performanceRatio < 0.8) {
+        adjustmentFactor *= 1.1; // Speed up if spending slower than historical
+      }
+      
+      confidenceScore += 0.1; // Higher confidence with historical data
+    }
+    
+    // Calculate recommended daily budget
+    const remainingBudget = Math.max(0, monthlyBudget - currentSpend);
+    const baseDailyRecommendation = remainingBudget / Math.max(daysRemaining, 1);
+    const adjustedDailyRecommendation = baseDailyRecommendation * adjustmentFactor;
+    
+    // Apply safety constraints
+    const currentDailyBudget = monthlyBudget / totalDaysInMonth;
+    const constrainedRecommendation = Math.min(
+      Math.max(
+        adjustedDailyRecommendation,
+        currentDailyBudget * this.pacingParams.maxDailyDecrease
+      ),
+      currentDailyBudget * this.pacingParams.maxDailyIncrease
+    );
+    
+    // Determine pacing status
+    let status = BudgetStatus.ON_TRACK;
+    if (currentSpend >= monthlyBudget * this.pacingParams.emergencyPauseThreshold) {
+      status = BudgetStatus.EXHAUSTED;
+    } else if (spendVariance > this.pacingParams.volatilityThreshold) {
+      status = BudgetStatus.OVERSPENDING;
+    } else if (spendVariance < -this.pacingParams.volatilityThreshold) {
+      status = BudgetStatus.UNDERSPENDING;
+    } else if (linearProjectedSpend > monthlyBudget * 0.95) {
+      status = BudgetStatus.AT_RISK;
+    }
+    
+    return {
+      recommendedDailyBudget: constrainedRecommendation,
+      projectedSpend: linearProjectedSpend,
+      adjustmentFactor: constrainedRecommendation / currentDailyBudget,
+      confidenceScore: Math.min(confidenceScore, 1.0),
+      status,
+      spendVariance,
+      expectedSpend
+    };
   }
 
   private calculatePacing(
@@ -288,13 +420,19 @@ class BudgetPacingService {
       seasonalityFactor = 1.1;
     }
 
-    // Combine factors
+    // Combine factors with intelligent weighting
     const adjustment = 
-      velocityFactor * (1 - this.mlParams.seasonalityWeight) +
-      seasonalityFactor * this.mlParams.seasonalityWeight;
+      velocityFactor * (1 - this.pacingParams.seasonalityBuffer) +
+      seasonalityFactor * this.pacingParams.seasonalityBuffer;
 
     // Clamp adjustment to reasonable range
     return Math.max(0.5, Math.min(2.0, adjustment));
+  }
+
+  private isWeekend(): boolean {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
   }
 
   private determinePacingStatus(
