@@ -14,6 +14,7 @@ export const users = pgTable("users", {
 
 export const googleAdsAccounts = pgTable("google_ads_accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   customerId: text("customer_id").notNull().unique(),
   name: text("name").notNull(),
   currency: text("currency").default("USD"),
