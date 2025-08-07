@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { googleAdsService } from "./services/google-ads";
 import { openRouterService } from "./services/openrouter";
 import { budgetPacingService } from "./services/budget-pacing";
+import { issueDetectionService } from "./services/issue-detection";
 import { insertUserSchema, insertChatSessionSchema, insertChatMessageSchema, insertCampaignBriefSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -344,6 +345,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Issue Detection routes
+  app.get("/api/issues/detect/:accountId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { accountId } = req.params;
+      const issues = await issueDetectionService.detectAllIssues(accountId);
+      res.json(issues);
+    } catch (error: any) {
+      console.error('Issue detection failed:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/issues/health-score/:accountId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { accountId } = req.params;
+      const healthScore = await issueDetectionService.getAccountHealthScore(accountId);
+      res.json(healthScore);
+    } catch (error: any) {
+      console.error('Health score calculation failed:', error);
+      res.status(500).json({ error: error.message });
     }
   });
 
