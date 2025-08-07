@@ -10,6 +10,10 @@ import BudgetPacingCard from '@/components/budget-pacing-card';
 import MonitoringCard from '@/components/monitoring-card';
 import SchedulerCard from '@/components/scheduler-card';
 import CampaignGenerationCard from '@/components/campaign-generation-card';
+import Campaigns from './campaigns';
+import Performance from './performance';
+import Approvals from './approvals';
+import Settings from './settings';
 import type { GoogleAdsAccount } from '@shared/schema';
 
 export default function Dashboard() {
@@ -43,35 +47,42 @@ export default function Dashboard() {
   }
 
   const renderMainContent = () => {
-    if (activeView === 'escalation') {
-      return <EscalationSettings selectedClient={selectedClient} />;
-    }
-
-    if (activeView === 'automation') {
-      return (
-        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BudgetPacingCard selectedClient={selectedClient} />
-            <MonitoringCard selectedClient={selectedClient} />
-            <SchedulerCard />
-            <CampaignGenerationCard 
+    switch (activeView) {
+      case 'escalation':
+        return <EscalationSettings selectedClient={selectedClient} />;
+      case 'automation':
+        return (
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <BudgetPacingCard selectedClient={selectedClient} />
+              <MonitoringCard selectedClient={selectedClient} />
+              <SchedulerCard />
+              <CampaignGenerationCard 
+                selectedClient={selectedClient} 
+                currentSessionId={currentSessionId}
+              />
+            </div>
+          </div>
+        );
+      case 'campaigns':
+        return <Campaigns />;
+      case 'performance':
+        return <Performance />;
+      case 'approvals':
+        return <Approvals />;
+      case 'settings':
+        return <Settings />;
+      default:
+        return (
+          <div className="flex-1 flex overflow-hidden">
+            <QuickInsights selectedClient={selectedClient} />
+            <ChatInterface 
               selectedClient={selectedClient} 
-              currentSessionId={currentSessionId}
+              onSessionChange={setCurrentSessionId}
             />
           </div>
-        </div>
-      );
+        );
     }
-    
-    return (
-      <div className="flex-1 flex overflow-hidden">
-        <QuickInsights selectedClient={selectedClient} />
-        <ChatInterface 
-          selectedClient={selectedClient} 
-          onSessionChange={setCurrentSessionId}
-        />
-      </div>
-    );
   };
 
   return (
