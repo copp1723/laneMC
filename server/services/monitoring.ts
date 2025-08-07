@@ -97,7 +97,7 @@ class MonitoringService {
 
   private async runMonitoringCycle(): Promise<void> {
     try {
-      const accounts = await storage.getGoogleAdsAccounts();
+      const accounts = await storage.getGoogleAdsAccounts("");
       
       for (const account of accounts) {
         await this.monitorAccount(account);
@@ -111,7 +111,7 @@ class MonitoringService {
 
   private async runHealthChecks(): Promise<void> {
     try {
-      const accounts = await storage.getGoogleAdsAccounts();
+      const accounts = await storage.getGoogleAdsAccounts("");
       
       for (const account of accounts) {
         await this.performHealthCheck(account);

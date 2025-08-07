@@ -104,17 +104,17 @@ export class AutomationEngine {
         );
         
         // Store in database
-        await storage.createPerformanceMetrics({
+        await storage.createPerformanceMetric({
           googleAdsAccountId: accountId,
           campaignId: campaign.id,
           date: new Date(),
-          impressions: metrics.impressions,
-          clicks: metrics.clicks,
-          conversions: metrics.conversions,
-          cost: metrics.cost,
-          ctr: metrics.ctr,
-          cpc: metrics.cpc,
-          conversionRate: metrics.conversionRate,
+          impressions: metrics.impressions.toString(),
+          clicks: metrics.clicks.toString(),
+          conversions: metrics.conversions.toString(),
+          cost: metrics.cost.toString(),
+          ctr: metrics.ctr.toString(),
+          cpc: metrics.cpc.toString(),
+          conversionRate: metrics.conversionRate.toString(),
         });
       }
     } catch (error) {
@@ -138,7 +138,7 @@ export class AutomationEngine {
           
           console.log(`🔧 Auto-adjusting budget for campaign ${campaign.id}: $${campaign.budget} → $${newBudget}`);
           
-          await googleAdsService.updateCampaignBudget(customerId, campaign.id, newBudget);
+          await googleAdsService.updateCampaignBudget(customerId, campaign.id, newBudget.toString());
           
           // Update database
           const dbCampaign = await storage.getCampaigns(accountId);

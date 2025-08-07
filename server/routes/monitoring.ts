@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { monitoringService } from '../services/monitoring';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../services/auth';
 
 const router = Router();
 

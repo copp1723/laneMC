@@ -173,7 +173,7 @@ class CampaignGenerator {
       const reviewResult = await this.reviewCampaign(campaignData);
 
       // Save campaign to database
-      const campaign = await this.saveCampaign(campaignData, conversationId);
+      const campaign = await this.saveCampaign(campaignData, conversationId, brief.googleAdsAccountId || "");
 
       return {
         success: true,
@@ -608,12 +608,11 @@ Return review as JSON.`;
       name: campaignData.campaign?.name || 'AI Generated Campaign',
       status: 'draft',
       googleAdsAccountId,
-      campaignType: 'SEARCH',
+      type: 'SEARCH',
       budget: campaignData.budget?.amount || 1000,
-      targetingCriteria: JSON.stringify(campaignData.targeting || {}),
-      adGroups: JSON.stringify(campaignData.adGroups || []),
-      keywords: JSON.stringify(campaignData.keywords || []),
-      conversationId
+      targetLocations: campaignData.targeting || {},
+      adGroups: campaignData.adGroups || {},
+      keywords: campaignData.keywords || {}
     };
 
     return await storage.createCampaign(campaign);

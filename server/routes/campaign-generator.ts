@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { campaignGenerator } from '../services/campaign-generator';
 import { storage } from '../storage';
-import { authMiddleware } from '../middleware/auth';
+import { authenticateToken } from '../services/auth';
 
 const router = Router();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(authenticateToken);
 
 // Generate campaign from conversation
 router.post('/generate-from-conversation', async (req, res) => {
@@ -21,7 +21,7 @@ router.post('/generate-from-conversation', async (req, res) => {
     }
     
     // Get chat messages from the conversation
-    const messages = await storage.getChatSessionMessages(sessionId || conversationId);
+    const messages = await storage.getChatMessages(sessionId || conversationId);
     
     const result = await campaignGenerator.generateFromConversation(
       conversationId || sessionId,
@@ -59,8 +59,9 @@ router.post('/generate-from-brief', async (req, res) => {
         id: 'brief-input',
         role: 'user' as const,
         content: `Please create a Google Ads campaign with the following requirements: ${JSON.stringify(brief)}`,
-        timestamp: new Date(),
-        sessionId: conversationId || 'brief-generation'
+        createdAt: new Date(),
+        sessionId: conversationId || 'brief-generation',
+        metadata: {}
       }
     ];
     
