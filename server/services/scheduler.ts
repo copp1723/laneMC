@@ -3,6 +3,7 @@
  * Coordinates automated operations, reports, and maintenance tasks
  */
 
+import * as parser from 'cron-parser';
 import { budgetPacingService } from './budget-pacing';
 import { monitoringService } from './monitoring';
 import { campaignAnalyticsService } from './campaign-analytics';
@@ -162,11 +163,11 @@ class SchedulerService {
 
   private async scheduleTask(task: ScheduledTask): Promise<void> {
     if (!task.enabled) return;
-
     const nextRun = this.calculateNextRun(task.schedule);
     task.nextRun = nextRun;
-
-    const delay = nextRun.getTime() - Date.now();
+    // add small jitter (±20s) to avoid herds
+    const jitter = (Math.random() - 0.5) * 40000;
+    const delay = Math.max(0, nextRun.getTime() - Date.now() + jitter);
     
     const timer = setTimeout(async () => {
       await this.executeTask(task);
@@ -269,7 +270,7 @@ class SchedulerService {
     
     try {
       // Trigger budget pacing checks for all accounts
-      const accounts = await storage.getGoogleAdsAccounts();
+      const accounts = await storage.getAllGoogleAdsAccounts();
       let checkedCampaigns = 0;
 
       for (const account of accounts) {
@@ -322,7 +323,7 @@ class SchedulerService {
     const startTime = Date.now();
     
     try {
-      const accounts = await storage.getGoogleAdsAccounts();
+      const accounts = await storage.getAllGoogleAdsAccounts();
       let optimizedCampaigns = 0;
 
       for (const account of accounts) {
@@ -354,7 +355,7 @@ class SchedulerService {
     const startTime = Date.now();
     
     try {
-      const accounts = await storage.getGoogleAdsAccounts();
+      const accounts = await storage.getAllGoogleAdsAccounts();
       let reportsGenerated = 0;
 
       for (const account of accounts) {
@@ -407,7 +408,7 @@ class SchedulerService {
     const startTime = Date.now();
     
     try {
-      const accounts = await storage.getGoogleAdsAccounts();
+      const accounts = await storage.getAllGoogleAdsAccounts();
       let anomaliesDetected = 0;
 
       for (const account of accounts) {
@@ -537,47 +538,8 @@ class SchedulerService {
   }
 
   private calculateNextRun(schedule: string): Date {
-    // Simplified cron parser - in production would use a proper cron library
-    const now = new Date();
-    
-    // Parse basic cron expressions
-    if (schedule === '0 */2 * * *') { // Every 2 hours
-      const next = new Date(now);
-      next.setHours(now.getHours() + 2, 0, 0, 0);
-      return next;
-    }
-    
-    if (schedule === '*/10 * * * *') { // Every 10 minutes
-      const next = new Date(now);
-      next.setMinutes(now.getMinutes() + 10, 0, 0);
-      return next;
-    }
-    
-    if (schedule === '*/30 * * * *') { // Every 30 minutes
-      const next = new Date(now);
-      next.setMinutes(now.getMinutes() + 30, 0, 0);
-      return next;
-    }
-    
-    if (schedule === '*/15 * * * *') { // Every 15 minutes
-      const next = new Date(now);
-      next.setMinutes(now.getMinutes() + 15, 0, 0);
-      return next;
-    }
-    
-    if (schedule === '0 6 * * *') { // Daily at 6 AM
-      const next = new Date(now);
-      next.setHours(6, 0, 0, 0);
-      if (next <= now) {
-        next.setDate(next.getDate() + 1);
-      }
-      return next;
-    }
-    
-    // Default: 1 hour from now
-    const next = new Date(now);
-    next.setHours(now.getHours() + 1);
-    return next;
+    const it = parser.parseExpression(schedule, { currentDate: new Date() });
+    return it.next().toDate();
   }
 
   // Public methods for task management

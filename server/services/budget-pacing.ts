@@ -118,42 +118,29 @@ class BudgetPacingService {
 
   private async checkAccountBudgets(account: GoogleAdsAccount): Promise<void> {
     try {
-      // Get campaigns for this account
       const campaigns = await googleAdsService.getCampaigns(account.customerId);
-      
-      for (const campaign of campaigns) {
-        await this.checkCampaignBudget(account, campaign.id);
-      }
+      for (const campaign of campaigns) await this.checkCampaignBudget(account, campaign.id, campaign);
     } catch (error) {
       console.error(`Error checking budgets for account ${account.id}:`, error);
     }
   }
 
-  async checkCampaignBudget(account: GoogleAdsAccount, campaignId: string): Promise<PacingResult> {
+  async checkCampaignBudget(account: GoogleAdsAccount, campaignId: string, campaignObj?: any): Promise<PacingResult> {
     try {
-      // Get performance metrics for analysis
-      const currentMetrics = await googleAdsService.getPerformanceMetrics(
-        account.customerId, 
-        campaignId, 
-        'THIS_MONTH'
-      );
+      // Metrics windows: yesterday for pace, mtd for guardrails, 30d for trend
+      const yesterday = await googleAdsService.getPerformanceMetrics(account.customerId, campaignId, 'YESTERDAY');
+      const mtd       = await googleAdsService.getPerformanceMetrics(account.customerId, campaignId, 'THIS_MONTH');
+      const hist30    = await googleAdsService.getPerformanceMetrics(account.customerId, campaignId, 'LAST_30_DAYS');
 
-      const historicalMetrics = await googleAdsService.getPerformanceMetrics(
-        account.customerId, 
-        campaignId, 
-        'LAST_30_DAYS'
-      );
-
-      // Get campaign details for budget information
-      const campaigns = await googleAdsService.getCampaigns(account.customerId);
-      const campaign = campaigns.find(c => c.id === campaignId);
+      // Budget info
+      const campaign = campaignObj ?? (await googleAdsService.getCampaigns(account.customerId)).find(c => c.id === campaignId);
       
       if (!campaign) {
         throw new Error(`Campaign ${campaignId} not found`);
       }
 
       const monthlyBudget = typeof campaign.budget === 'string' ? parseFloat(campaign.budget) : campaign.budget;
-      const currentSpend = currentMetrics.cost;
+      const currentSpend = mtd.cost;
       
       // Calculate time factors
       const daysRemaining = this.calculateDaysRemainingInMonth();
@@ -167,8 +154,8 @@ class BudgetPacingService {
         daysElapsed,
         daysRemaining,
         totalDaysInMonth,
-        currentMetrics,
-        historicalMetrics,
+        currentMetrics: mtd,
+        historicalMetrics: hist30,
         campaign
       });
 
@@ -521,6 +508,21 @@ class BudgetPacingService {
         budgetLimit,
         projectedSpend: pacingResult.projectedSpend,
         recommendedAction: "Reduce daily budget or pause low-performing keywords",
+        timestamp: new Date()
+      });
+    }
+    // Underspend alert
+    if (pacingResult.pacingStatus === BudgetStatus.UNDERSPENDING && pacingResult.projectedSpend < budgetLimit * 0.85) {
+      alerts.push({
+        id: `${campaignId}_underspend_${Date.now()}`,
+        campaignId,
+        alertType: "underspending",
+        severity: "medium",
+        message: `Campaign is likely to underspend the monthly budget`,
+        currentSpend: pacingResult.currentSpend,
+        budgetLimit,
+        projectedSpend: pacingResult.projectedSpend,
+        recommendedAction: "Increase daily budget or expand targeting",
         timestamp: new Date()
       });
     }

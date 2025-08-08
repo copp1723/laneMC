@@ -82,37 +82,36 @@ class GoogleAdsService {
     }
   }
 
-  private async makeRequest(endpoint: string, data?: any, customerId?: string): Promise<any> {
+  private async makeRequest(endpoint: string, data?: any): Promise<any> {
     const accessToken = await this.getAccessToken();
-    const headers: any = {
-      'Authorization': `Bearer ${accessToken}`,
+    const headers: Record<string,string> = {
+      Authorization: `Bearer ${accessToken}`,
       'developer-token': this.developerToken,
       'Content-Type': 'application/json',
     };
+    if (this.loginCustomerId) headers['login-customer-id'] = this.loginCustomerId; // manager stays here
 
-    // Use login customer ID for manager account access
-    if (this.loginCustomerId) {
-      headers['login-customer-id'] = this.loginCustomerId;
-    }
-
-    // Override with specific customer ID if provided
-    if (customerId) {
-      headers['login-customer-id'] = customerId;
-    }
-
-    try {
-      console.log(`Making Google Ads API request to: ${endpoint}`);
-      const response = await axios({
-        method: data ? 'POST' : 'GET',
-        url: `https://googleads.googleapis.com/${endpoint}`,
-        headers,
-        data,
-      });
-      console.log('Google Ads API request successful');
-      return response.data;
-    } catch (error: any) {
-      console.error('Google Ads API error:', error.response?.data || error.message);
-      throw new Error(`Google Ads API error: ${error.response?.data?.error?.message || error.message}`);
+    const url = `${this.baseUrl}/${endpoint}`;
+    const max = 5;
+    for (let i = 0; i < max; i++) {
+      try {
+        const resp = await axios({
+          method: data ? 'POST' : 'GET',
+          url,
+          headers,
+          data,
+          timeout: 20000
+        });
+        return resp.data;
+      } catch (e: any) {
+        const status = e?.response?.status;
+        const retryable = [429,500,502,503,504].includes(status);
+        if (!retryable || i === max - 1) {
+          console.error('Google Ads API error:', e.response?.data || e.message);
+          throw new Error(`Google Ads API error: ${e.response?.data?.error?.message || e.message}`);
+        }
+        await new Promise(r => setTimeout(r, 250 * Math.pow(2,i) + Math.random()*200));
+      }
     }
   }
 
@@ -123,9 +122,9 @@ class GoogleAdsService {
     try {
       // Use the correct Google Ads API URL format for listing accessible customers
       const accessToken = await this.getAccessToken();
-      const response = await axios.get(`https://googleads.googleapis.com/v15/customers:listAccessibleCustomers`, {
+      const response = await axios.get(`${this.baseUrl}/${this.apiVersion}/customers:listAccessibleCustomers`, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'developer-token': this.developerToken,
           'Content-Type': 'application/json',
         },
@@ -186,9 +185,7 @@ class GoogleAdsService {
       WHERE campaign.status IN ('ENABLED', 'PAUSED')
     `;
 
-    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
-      query,
-    }, customerId);
+    const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
 
     return (response.results || []).map((result: any) => ({
       id: result.campaign.id,
@@ -199,16 +196,10 @@ class GoogleAdsService {
     }));
   }
 
-  async getPerformanceMetrics(
-    customerId: string,
-    campaignId?: string,
-    dateRange: string = 'LAST_7_DAYS'
-  ): Promise<GoogleAdsMetrics> {
-    let whereClause = '';
-    if (campaignId) {
-      whereClause = `WHERE campaign.id = ${campaignId}`;
-    }
-
+  async getPerformanceMetrics(customerId: string, campaignId?: string, dateRange: string = 'LAST_7_DAYS'): Promise<GoogleAdsMetrics> {
+    const filters: string[] = [`segments.date DURING ${dateRange}`];
+    if (campaignId) filters.unshift(`campaign.id = ${campaignId}`);
+    const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
     const query = `
       SELECT 
         metrics.impressions,
@@ -218,14 +209,10 @@ class GoogleAdsService {
         metrics.ctr,
         metrics.average_cpc,
         metrics.conversions_from_interactions_rate
-      FROM campaign 
-      ${whereClause}
-      AND segments.date DURING ${dateRange}
+      FROM campaign
+      ${where}
     `;
-
-    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
-      query,
-    }, customerId);
+    const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
 
     // Aggregate metrics from all results
     const totals = (response.results || []).reduce((acc: any, result: any) => {
@@ -243,7 +230,7 @@ class GoogleAdsService {
       clicks: totals.clicks,
       conversions: totals.conversions,
       cost: totals.cost,
-      ctr: totals.clicks > 0 ? (totals.clicks / totals.impressions) : 0,
+      ctr: totals.impressions > 0 ? (totals.clicks / totals.impressions) : 0,
       cpc: totals.clicks > 0 ? (totals.cost / totals.clicks) : 0,
       conversionRate: totals.clicks > 0 ? (totals.conversions / totals.clicks) : 0,
     };
@@ -285,9 +272,8 @@ class GoogleAdsService {
     };
 
     const response = await this.makeRequest(
-      `customers/${customerId}/campaigns:mutate`,
-      campaign,
-      customerId
+      `${this.apiVersion}/customers/${customerId}/campaigns:mutate`,
+      campaign
     );
 
     if (response.results && response.results.length > 0) {
@@ -319,9 +305,8 @@ class GoogleAdsService {
     };
 
     const response = await this.makeRequest(
-      `customers/${customerId}/campaignBudgets:mutate`,
-      budget,
-      customerId
+      `${this.apiVersion}/customers/${customerId}/campaignBudgets:mutate`,
+      budget
     );
 
     if (response.results && response.results.length > 0) {
@@ -371,11 +356,7 @@ class GoogleAdsService {
       WHERE campaign.id = ${campaignId}
     `;
 
-    const campaignResponse = await this.makeRequest(
-      `customers/${customerId}/googleAds:search`,
-      { query: campaignQuery },
-      customerId
-    );
+    const campaignResponse = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query: campaignQuery });
 
     if (campaignResponse.results && campaignResponse.results.length > 0) {
       const budgetResourceName = campaignResponse.results[0].campaign.campaignBudget;
@@ -392,11 +373,7 @@ class GoogleAdsService {
         ]
       };
 
-      await this.makeRequest(
-        `customers/${customerId}/campaignBudgets:mutate`,
-        budgetUpdate,
-        customerId
-      );
+      await this.makeRequest(`${this.apiVersion}/customers/${customerId}/campaignBudgets:mutate`, budgetUpdate);
     }
   }
 
@@ -417,9 +394,7 @@ class GoogleAdsService {
           AND ad_group_criterion.quality_info.quality_score IS NOT NULL
       `;
 
-      const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
-        query
-      }, customerId);
+      const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
 
       return response.results?.map((row: any) => ({
         keywordId: row.adGroupCriterion?.resourceName,
@@ -449,9 +424,7 @@ class GoogleAdsService {
           AND ad_group_ad.policy_summary.approval_status = DISAPPROVED
       `;
 
-      const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
-        query
-      }, customerId);
+      const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
 
       return response.results?.map((row: any) => ({
         adId: row.adGroupAd?.ad?.id,
