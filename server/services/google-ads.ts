@@ -44,7 +44,7 @@ class GoogleAdsService {
     this.developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '';
     this.refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN || '';
     this.loginCustomerId = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || '';
-    this.isMockMode = process.env.ENVIRONMENT !== 'production';
+    this.isMockMode = false; // Always use real Google Ads API
     
     console.log('Google Ads Service initialized:', {
       isMockMode: this.isMockMode,
@@ -57,10 +57,6 @@ class GoogleAdsService {
   }
 
   private async getAccessToken(): Promise<string> {
-    if (this.isMockMode) {
-      return 'mock_access_token';
-    }
-
     try {
       console.log('Attempting OAuth token refresh...');
       console.log('Client ID configured:', !!this.clientId);
@@ -87,10 +83,6 @@ class GoogleAdsService {
   }
 
   private async makeRequest(endpoint: string, data?: any, customerId?: string): Promise<any> {
-    if (this.isMockMode) {
-      return this.getMockResponse(endpoint, data);
-    }
-
     const accessToken = await this.getAccessToken();
     const headers: any = {
       'Authorization': `Bearer ${accessToken}`,
@@ -124,80 +116,9 @@ class GoogleAdsService {
     }
   }
 
-  private getMockResponse(endpoint: string, data?: any): any {
-    // Mock responses for development
-    if (endpoint.includes('customers:listAccessibleCustomers')) {
-      return {
-        resourceNames: [
-          'customers/123-456-7890',
-          'customers/234-567-8901',
-          'customers/345-678-9012',
-        ],
-      };
-    }
 
-    if (endpoint.includes('googleAds:search')) {
-      if (data?.query?.includes('customer')) {
-        return {
-          results: [
-            {
-              customer: {
-                resourceName: 'customers/123-456-7890',
-                id: '1234567890',
-                descriptiveName: 'Acme Corp',
-                currencyCode: 'USD',
-                timeZone: 'America/New_York',
-              },
-            },
-          ],
-        };
-      }
-
-      if (data?.query?.includes('campaign')) {
-        return {
-          results: [
-            {
-              campaign: {
-                resourceName: 'customers/123-456-7890/campaigns/11111111',
-                id: '11111111',
-                name: 'Search Campaign - Brand Terms',
-                status: 'ENABLED',
-                advertisingChannelType: 'SEARCH',
-              },
-              campaignBudget: {
-                amountMicros: '1000000000', // $1000 in micros
-              },
-            },
-          ],
-        };
-      }
-
-      if (data?.query?.includes('metrics')) {
-        return {
-          results: [
-            {
-              metrics: {
-                impressions: '12500',
-                clicks: '875',
-                conversions: 42.5,
-                costMicros: '284700000', // $284.70 in micros
-                ctr: 0.07,
-                averageCpc: '325000', // $0.325 in micros
-                conversionRate: 0.0486,
-              },
-            },
-          ],
-        };
-      }
-    }
-
-    return { results: [] };
-  }
 
   async getAccessibleCustomers(): Promise<string[]> {
-    if (this.isMockMode) {
-      return ['1234567890', '9876543210'];
-    }
 
     try {
       // Use the correct Google Ads API URL format for listing accessible customers
@@ -339,9 +260,7 @@ class GoogleAdsService {
       bidStrategy?: string;
     }
   ): Promise<string> {
-    if (this.isMockMode) {
-      return 'mock_campaign_id_' + Date.now();
-    }
+
 
     // Create campaign budget first
     const budgetId = await this.createCampaignBudget(customerId, campaignData.budget);
@@ -444,10 +363,6 @@ class GoogleAdsService {
   }
 
   async updateCampaignBudget(customerId: string, campaignId: string, newBudget: number): Promise<void> {
-    if (this.isMockMode) {
-      console.log(`Mock: Updated campaign ${campaignId} budget to $${newBudget}`);
-      return;
-    }
 
     // Get campaign budget resource name first
     const campaignQuery = `
@@ -487,49 +402,24 @@ class GoogleAdsService {
 
   // Quality Score and Issue Detection Methods
   async getQualityScoreMetrics(customerId: string, campaignId: string): Promise<any[]> {
-    if (this.isDevelopmentMode()) {
-      // Mock data for development
-      return [
-        {
-          keywordId: 'mock-keyword-1',
-          keyword: 'toyota dealership',
-          qualityScore: 4,
-          adRelevance: 'BELOW_AVERAGE',
-          landingPageExperience: 'AVERAGE',
-          expectedCtr: 'ABOVE_AVERAGE'
-        },
-        {
-          keywordId: 'mock-keyword-2', 
-          keyword: 'car financing',
-          qualityScore: 7,
-          adRelevance: 'ABOVE_AVERAGE',
-          landingPageExperience: 'ABOVE_AVERAGE',
-          expectedCtr: 'AVERAGE'
-        }
-      ];
-    }
-
     try {
-      const response = await this.makeRequest(
-        customerId, 
-        `/googleAds/v15/customers/${customerId}/googleAds:searchStream`,
-        'POST',
-        {
-          query: `
-            SELECT 
-              ad_group.id,
-              ad_group_criterion.keyword.text,
-              ad_group_criterion.quality_info.quality_score,
-              ad_group_criterion.quality_info.creative_quality_score,
-              ad_group_criterion.quality_info.landing_page_quality_score,
-              ad_group_criterion.quality_info.search_predicted_ctr
-            FROM ad_group_criterion 
-            WHERE campaign.id = ${campaignId}
-              AND ad_group_criterion.type = KEYWORD
-              AND ad_group_criterion.quality_info.quality_score IS NOT NULL
-          `
-        }
-      );
+      const query = `
+        SELECT 
+          ad_group.id,
+          ad_group_criterion.keyword.text,
+          ad_group_criterion.quality_info.quality_score,
+          ad_group_criterion.quality_info.creative_quality_score,
+          ad_group_criterion.quality_info.landing_page_quality_score,
+          ad_group_criterion.quality_info.search_predicted_ctr
+        FROM ad_group_criterion 
+        WHERE campaign.id = ${campaignId}
+          AND ad_group_criterion.type = KEYWORD
+          AND ad_group_criterion.quality_info.quality_score IS NOT NULL
+      `;
+
+      const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
+        query
+      }, customerId);
 
       return response.results?.map((row: any) => ({
         keywordId: row.adGroupCriterion?.resourceName,
@@ -547,37 +437,21 @@ class GoogleAdsService {
   }
 
   async getAdDisapprovals(customerId: string, campaignId: string): Promise<any[]> {
-    if (this.isDevelopmentMode()) {
-      // Mock disapproval for development
-      return [
-        {
-          adId: 'mock-ad-1',
-          headline: 'Best Car Deals in Town!',
-          status: 'DISAPPROVED',
-          policyTopic: 'MISLEADING_CONTENT',
-          reason: 'Unsubstantiated claims about being "best"'
-        }
-      ];
-    }
-
     try {
-      const response = await this.makeRequest(
-        customerId,
-        `/googleAds/v15/customers/${customerId}/googleAds:searchStream`,
-        'POST',
-        {
-          query: `
-            SELECT
-              ad_group_ad.ad.id,
-              ad_group_ad.ad.text_ad.headline1,
-              ad_group_ad.policy_summary.approval_status,
-              ad_group_ad.policy_summary.policy_topic_entries
-            FROM ad_group_ad
-            WHERE campaign.id = ${campaignId}
-              AND ad_group_ad.policy_summary.approval_status = DISAPPROVED
-          `
-        }
-      );
+      const query = `
+        SELECT
+          ad_group_ad.ad.id,
+          ad_group_ad.ad.text_ad.headline1,
+          ad_group_ad.policy_summary.approval_status,
+          ad_group_ad.policy_summary.policy_topic_entries
+        FROM ad_group_ad
+        WHERE campaign.id = ${campaignId}
+          AND ad_group_ad.policy_summary.approval_status = DISAPPROVED
+      `;
+
+      const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
+        query
+      }, customerId);
 
       return response.results?.map((row: any) => ({
         adId: row.adGroupAd?.ad?.id,

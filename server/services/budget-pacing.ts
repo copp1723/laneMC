@@ -146,13 +146,13 @@ class BudgetPacingService {
 
       // Get campaign details for budget information
       const campaigns = await googleAdsService.getCampaigns(account.customerId);
-      const campaign = campaigns.find(c => c.id === campaignId.toString());
+      const campaign = campaigns.find(c => c.id === campaignId);
       
       if (!campaign) {
         throw new Error(`Campaign ${campaignId} not found`);
       }
 
-      const monthlyBudget = parseFloat(campaign.budget) || 3000; // Default fallback
+      const monthlyBudget = typeof campaign.budget === 'string' ? parseFloat(campaign.budget) : campaign.budget;
       const currentSpend = currentMetrics.cost;
       
       // Calculate time factors
