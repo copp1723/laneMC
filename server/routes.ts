@@ -929,6 +929,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Google Ads API Testing
+  app.get('/api/google-ads/test-connection', authenticateToken, async (req, res) => {
+    try {
+      console.log('🧪 Testing Google Ads API live connection...');
+      
+      // Test 1: Get accessible customers
+      console.log('Step 1: Testing accessible customers endpoint...');
+      const accessibleCustomers = await googleAdsService.getAccessibleCustomers();
+      console.log('✅ Accessible customers:', accessibleCustomers);
+
+      // Test 2: Try to get customer info for each accessible customer
+      const customerTests = [];
+      for (const customerId of accessibleCustomers.slice(0, 3)) { // Test first 3
+        try {
+          console.log(`Step 2: Testing customer info for ${customerId}...`);
+          const customerInfo = await googleAdsService.getCustomerInfo(customerId);
+          customerTests.push({
+            customerId,
+            status: 'success' as const,
+            info: customerInfo
+          });
+          console.log(`✅ Customer ${customerId}:`, customerInfo);
+        } catch (error: any) {
+          customerTests.push({
+            customerId,
+            status: 'error' as const,
+            error: error.message
+          });
+          console.log(`❌ Customer ${customerId} failed:`, error.message);
+        }
+      }
+
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        results: {
+          accessibleCustomers,
+          customerTests
+        },
+        summary: {
+          totalAccessibleCustomers: accessibleCustomers.length,
+          successfulCustomers: customerTests.filter(t => t.status === 'success').length
+        }
+      });
+
+    } catch (error: any) {
+      console.error('❌ Google Ads API test failed:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+        suggestion: error.message.includes('invalid_grant') 
+          ? 'Refresh token expired - regenerate using OAuth Playground'
+          : error.message.includes('invalid_client')
+          ? 'Check OAuth Client ID/Secret in Google Cloud Console'
+          : 'Check Google Ads API credentials and permissions'
+      });
+    }
+  });
+
   // Settings routes
   app.get('/api/settings/user', authenticateToken, async (req: AuthRequest, res) => {
     try {
