@@ -156,9 +156,9 @@ class GoogleAdsService {
       WHERE customer.id = ${customerId}
     `;
 
-    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
+    const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, {
       query,
-    }, customerId);
+    });
 
     if (response.results && response.results.length > 0) {
       const customer = response.results[0].customer;

@@ -90,25 +90,17 @@ export async function initializeDatabase() {
     await tempDb.execute(sql`
       CREATE TABLE IF NOT EXISTS campaign_briefs (
         id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id VARCHAR NOT NULL REFERENCES users(id),
+        user_id VARCHAR REFERENCES users(id),
         google_ads_account_id VARCHAR REFERENCES google_ads_accounts(id),
+        chat_session_id VARCHAR REFERENCES chat_sessions(id),
         title TEXT NOT NULL,
-        business_description TEXT,
-        target_audience TEXT,
-        goals TEXT,
-        budget_range TEXT,
-        geographic_targets JSONB,
-        keywords JSONB,
-        competitors JSONB,
-        unique_selling_points JSONB,
-        campaign_type TEXT,
-        ad_formats JSONB,
-        landing_pages JSONB,
-        conversion_goals JSONB,
-        additional_requirements TEXT,
+        objectives JSONB,
+        target_audience JSONB,
+        budget DECIMAL(10,2),
+        timeline JSONB,
         status TEXT DEFAULT 'draft',
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        generated_campaign JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
       );
     `);
     

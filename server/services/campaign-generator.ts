@@ -173,7 +173,7 @@ class CampaignGenerator {
       const reviewResult = await this.reviewCampaign(campaignData);
 
       // Save campaign to database
-      const campaign = await this.saveCampaign(campaignData, conversationId, brief.googleAdsAccountId || "");
+      const campaign = await this.saveCampaign(campaignData, conversationId, (brief as any).googleAdsAccountId || "");
 
       return {
         success: true,

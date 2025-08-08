@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { campaignAnalyticsService } from '../services/campaign-analytics';
-import { authMiddleware } from '../services/auth';
+import { authenticateToken } from '../services/auth';
 
 const router = Router();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(authenticateToken as any);
 
 // Analyze campaign performance
 router.get('/accounts/:accountId/campaigns/:campaignId/analysis', async (req, res) => {

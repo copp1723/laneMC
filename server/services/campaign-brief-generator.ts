@@ -400,13 +400,15 @@ Focus on automotive industry best practices, seasonal considerations, and local 
     const briefData: InsertCampaignBrief = {
       googleAdsAccountId: accountId,
       title: brief.title,
-      objectives: brief.objectives.join('; '),
-      targetAudience: brief.targetAudience.demographics.join(', '),
-      budget: brief.budget.daily.toString(),
-      keywords: brief.keywords.primary.join(', '),
-      adCopy: brief.adCopy.headlines.join(' | '),
+      objectives: brief.objectives as any,
+      targetAudience: brief.targetAudience as any,
+      budget: brief.budget.daily as any,
       status: 'draft',
-      conversationId
+      generatedCampaign: {
+        keywords: brief.keywords,
+        adCopy: brief.adCopy,
+      } as any,
+      chatSessionId: conversationId
     };
 
     const savedBrief = await storage.createCampaignBrief(briefData);

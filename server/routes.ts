@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { googleAdsService } from "./services/google-ads";
 import { openRouterService } from "./services/openrouter";
 import { budgetPacingService } from "./services/budget-pacing";
+import { campaignGeneratorRouter } from './routes/campaign-generator';
 import { issueDetectionService } from "./services/issue-detection";
 import { campaignBriefGeneratorService } from "./services/campaign-brief-generator";
 import { insertUserSchema, insertChatSessionSchema, insertChatMessageSchema, insertCampaignBriefSchema, insertSupermemoryConnectionSchema, insertSupermemoryMemorySchema } from "@shared/schema";
@@ -649,18 +650,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: 'SEARCH',
         budget: parseFloat(brief.budget || '100'),
         bidStrategy: 'MAXIMIZE_CLICKS',
-        keywords: brief.keywords ? brief.keywords.split(', ') : [],
+        keywords: Array.isArray(brief.objectives) ? brief.objectives : [],
         adGroups: [{
           name: 'Ad Group 1',
-          ads: brief.adCopy ? [brief.adCopy] : []
+          ads: [] as any[]
         }],
-        targetLocations: brief.targetAudience ? [brief.targetAudience] : []
+        targetLocations: [] as string[]
       };
 
       // Create campaign via Google Ads API
       const campaignId = await googleAdsService.createCampaign(
         account.customerId,
-        campaignData
+        campaignData as any
       );
 
       // Save campaign to database
@@ -810,38 +811,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Campaign generation routes
-  app.post("/api/campaign-generator/generate-from-conversation", authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      const { sessionId } = req.body;
-      
-      if (!sessionId) {
-        return res.status(400).json({ success: false, error: "Session ID is required" });
-      }
-      
-      // Mock campaign generation result
-      const mockResult = {
-        success: true,
-        campaignId: "generated_" + Date.now(),
-        workflowId: "workflow_" + Date.now(),
-        brief: {
-          campaignName: "AI Generated Campaign",
-          objective: "conversions",
-          budget: { amount: 3000, period: "monthly", currency: "USD" }
-        },
-        readyToLaunch: false,
-        recommendations: [
-          "Review generated campaign structure",
-          "Adjust budget allocation",
-          "Test ad copy variations"
-        ]
-      };
-      
-      res.json({ success: true, data: mockResult });
-    } catch (error: any) {
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
+  // Mount real campaign generator router (replaces previous mock endpoint)
+  app.use('/api/campaign-generator', campaignGeneratorRouter);
 
   // Monitoring routes
   app.get("/api/monitoring/accounts/:accountId/campaigns/:campaignId/health", authenticateToken, async (req, res) => {
@@ -1013,7 +984,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/settings/user', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const userSettings = {
-        id: req.user?.userId,
+  id: req.user?.id,
         email: req.user?.email || 'user@example.com',
         name: 'Lane MCP User',
         timezone: 'America/New_York',
@@ -1080,8 +1051,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/settings/api/test-connection', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const googleAdsService = new GoogleAdsService();
-      
       try {
         await googleAdsService.getAccessibleCustomers();
         res.json({ 

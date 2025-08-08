@@ -362,7 +362,7 @@ export default function MemoryManagement() {
             <div className="flex justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin" />
             </div>
-          ) : memories.length === 0 ? (
+          ) : (memories as any[]).length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center">
                 <Database className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -450,7 +450,7 @@ export default function MemoryManagement() {
             <div className="flex justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin" />
             </div>
-          ) : connections.length === 0 ? (
+          ) : (connections as any[]).length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center">
                 <LinkIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -532,7 +532,7 @@ export default function MemoryManagement() {
               <div className="flex justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin" />
               </div>
-            ) : searchQuery && searchResults.length === 0 ? (
+            ) : searchQuery && (searchResults as any[]).length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
                   <Search className="w-12 h-12 mx-auto mb-4 text-gray-400" />

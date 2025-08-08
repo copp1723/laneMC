@@ -36,6 +36,7 @@ export const campaigns = pgTable("campaigns", {
   targetLocations: jsonb("target_locations"),
   keywords: jsonb("keywords"),
   adGroups: jsonb("ad_groups"),
+  generationArtifact: jsonb("generation_artifact"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -1,7 +1,7 @@
 import { storage } from "../storage";
 import { googleAdsService } from "./google-ads";
 import { budgetPacingService } from "./budget-pacing";
-import type { GoogleAdsAccount, PerformanceMetrics } from "@shared/schema";
+import type { GoogleAdsAccount, PerformanceMetric } from "@shared/schema";
 
 export interface DetectedIssue {
   id: string;

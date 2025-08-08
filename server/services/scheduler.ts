@@ -3,7 +3,7 @@
  * Coordinates automated operations, reports, and maintenance tasks
  */
 
-import * as parser from 'cron-parser';
+import CronExpressionParser from 'cron-parser';
 import { budgetPacingService } from './budget-pacing';
 import { monitoringService } from './monitoring';
 import { campaignAnalyticsService } from './campaign-analytics';
@@ -538,7 +538,7 @@ class SchedulerService {
   }
 
   private calculateNextRun(schedule: string): Date {
-    const it = parser.parseExpression(schedule, { currentDate: new Date() });
+    const it = CronExpressionParser.parse(schedule, { currentDate: new Date() });
     return it.next().toDate();
   }
 

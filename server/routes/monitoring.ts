@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { monitoringService } from '../services/monitoring';
-import { authMiddleware } from '../services/auth';
+import { authenticateToken } from '../services/auth';
 
 const router = Router();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(authenticateToken as any);
 
 // Get campaign health status
 router.get('/accounts/:accountId/campaigns/:campaignId/health', async (req, res) => {

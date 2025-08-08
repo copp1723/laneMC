@@ -81,16 +81,13 @@ export function CampaignBriefGenerator({
   // Generate campaign brief from conversation
   const generateBrief = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/campaign-brief/generate`, {
-        method: 'POST',
-        body: JSON.stringify({
-          sessionId,
-          accountId
-        })
+      const res = await apiRequest('POST', `/api/campaign-brief/generate`, {
+        sessionId,
+        accountId,
       });
-      return response;
+      return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       if (data.success && data.brief) {
         setGeneratedBrief(data.brief);
         setShowReviewMode(true);
@@ -109,17 +106,14 @@ export function CampaignBriefGenerator({
   const refineBrief = useMutation({
     mutationFn: async ({ feedback, changes }: { feedback: string; changes: string[] }) => {
       if (!generatedBrief) throw new Error('No brief to refine');
-      
-      const response = await apiRequest(`/api/campaign-brief/${generatedBrief.id}/refine`, {
-        method: 'POST',
-        body: JSON.stringify({
-          feedback,
-          requestedChanges: changes
-        })
+
+      const res = await apiRequest('POST', `/api/campaign-brief/${generatedBrief.id}/refine`, {
+        feedback,
+        requestedChanges: changes,
       });
-      return response;
+      return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       if (data.success && data.refinedBrief) {
         setGeneratedBrief(data.refinedBrief);
       }
@@ -130,17 +124,14 @@ export function CampaignBriefGenerator({
   const createCampaign = useMutation({
     mutationFn: async () => {
       if (!generatedBrief) throw new Error('No brief to create campaign from');
-      
-      const response = await apiRequest(`/api/campaigns/create-from-brief`, {
-        method: 'POST',
-        body: JSON.stringify({
-          briefId: generatedBrief.id,
-          accountId
-        })
+
+      const res = await apiRequest('POST', `/api/campaigns/create-from-brief`, {
+        briefId: generatedBrief.id,
+        accountId,
       });
-      return response;
+      return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       if (data.success) {
         queryClient.invalidateQueries({ queryKey: ['/api/campaigns'] });
       }

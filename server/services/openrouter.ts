@@ -23,7 +23,15 @@ class OpenRouterService extends EventEmitter {
   constructor() {
     super();
     this.apiKey = process.env.OPENROUTER_API_KEY || '';
-    this.defaultModel = process.env.OPENROUTER_DEFAULT_MODEL || 'openai/gpt-5-mini';
+    // Prefer an explicitly configured model; fall back to a widely available anthropic model name if absent
+    const fallbackModel = 'anthropic/claude-3-sonnet';
+    this.defaultModel = process.env.OPENROUTER_DEFAULT_MODEL || fallbackModel;
+    if (!process.env.OPENROUTER_DEFAULT_MODEL) {
+      console.log(`[openrouter] OPENROUTER_DEFAULT_MODEL not set – using fallback '${fallbackModel}'`);
+    }
+    if (!this.apiKey) {
+      console.warn('[openrouter] Warning: OPENROUTER_API_KEY is not configured; AI dependent routes will fail');
+    }
   }
 
   async streamChatCompletion(

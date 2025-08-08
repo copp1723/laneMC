@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { budgetPacingService } from '../services/budget-pacing';
-import { authMiddleware } from '../services/auth';
+import { authenticateToken } from '../services/auth';
 
 const router = Router();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(authenticateToken as any);
 
 // Get budget status for account or specific campaign
 router.get('/accounts/:accountId/budget-status', async (req, res) => {

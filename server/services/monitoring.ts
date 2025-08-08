@@ -513,7 +513,7 @@ class MonitoringService {
 
   private async triggerEscalations(issue: MonitoringIssue, account: GoogleAdsAccount): Promise<void> {
     try {
-      const escalationSettings = await storage.getEscalationSettings();
+      const escalationSettings = await storage.getEscalationSettings(account.id);
       
       for (const setting of escalationSettings) {
         if (setting.enabled && this.shouldEscalate(issue, setting)) {

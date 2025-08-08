@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { schedulerService } from '../services/scheduler';
-import { authMiddleware } from '../services/auth';
+import { authenticateToken } from '../services/auth';
 
 const router = Router();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(authenticateToken as any);
 
 // Get all scheduled tasks
 router.get('/tasks', async (req, res) => {

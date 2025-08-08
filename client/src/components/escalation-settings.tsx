@@ -262,7 +262,7 @@ export default function EscalationSettingsComponent({ selectedClient }: Escalati
                     </div>
                     
                     <div className="text-sm text-slate-600">
-                      {setting.notificationMethods && typeof setting.notificationMethods === 'object' && (
+                      {Boolean(setting.notificationMethods) && typeof setting.notificationMethods === 'object' && (
                         <div className="flex items-center space-x-2 mb-1">
                           <span>Notifications:</span>
                           {Object.entries(setting.notificationMethods as Record<string, boolean>)
@@ -271,7 +271,7 @@ export default function EscalationSettingsComponent({ selectedClient }: Escalati
                               <Badge key={method} variant="outline" className="text-xs">
                                 {method}
                               </Badge>
-                            ))}
+                            )) as React.ReactNode}
                         </div>
                       )}
                     </div>

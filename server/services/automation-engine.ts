@@ -113,9 +113,9 @@ export class AutomationEngine {
           googleAdsAccountId: accountId,
           campaignId: campaign.id,
           date: new Date(),
-          impressions: metrics.impressions.toString(),
-          clicks: metrics.clicks.toString(),
-          conversions: metrics.conversions.toString(),
+          impressions: Number(metrics.impressions) || 0,
+          clicks: Number(metrics.clicks) || 0,
+          conversions: Number(metrics.conversions) || 0,
           cost: metrics.cost.toString(),
           ctr: metrics.ctr.toString(),
           cpc: metrics.cpc.toString(),
@@ -146,13 +146,13 @@ export class AutomationEngine {
           
           console.log(`🔧 Auto-adjusting budget for campaign ${campaign.id}: $${campaign.budget} → $${newBudget}`);
           
-          await googleAdsService.updateCampaignBudget(customerId, campaign.id, newBudget.toString());
+          await googleAdsService.updateCampaignBudget(customerId, campaign.id, newBudget);
           
           // Update database
           const dbCampaign = await storage.getCampaigns(accountId);
           const matchingCampaign = dbCampaign.find(c => c.googleCampaignId === campaign.id);
           if (matchingCampaign) {
-            await storage.updateCampaign(matchingCampaign.id, { budget: newBudget });
+            await storage.updateCampaign(matchingCampaign.id, { budget: newBudget as any });
           }
         }
       }
