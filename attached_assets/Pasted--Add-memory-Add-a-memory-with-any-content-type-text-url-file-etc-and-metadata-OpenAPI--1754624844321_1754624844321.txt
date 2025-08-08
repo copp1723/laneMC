@@ -1,0 +1,202 @@
+# Add memory
+
+> Add a memory with any content type (text, url, file, etc.) and metadata
+
+## OpenAPI
+
+````yaml https://app.stainless.com/api/spec/documented/supermemory-new/openapi.documented.yml post /v3/memories
+paths:
+  path: /v3/memories
+  method: post
+  servers:
+    - url: https://api.supermemory.ai
+      description: Production Server
+  request:
+    security:
+      - title: bearerAuth
+        parameters:
+          query: {}
+          header:
+            Authorization:
+              type: http
+              scheme: bearer
+          cookie: {}
+    parameters:
+      path: {}
+      query: {}
+      header: {}
+      cookie: {}
+    body:
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              containerTags:
+                allOf:
+                  - type: array
+                    items:
+                      type: string
+                    description: >-
+                      Optional tags this memory should be containerized by. This
+                      can be an ID for your user, a project ID, or any other
+                      identifier you wish to use to group memories.
+                    example:
+                      - user_123
+                      - project_123
+              content:
+                allOf:
+                  - type: string
+                    description: >-
+                      The content to extract and process into a memory. This can
+                      be a URL to a website, a PDF, an image, or a video. 
+
+
+                      Plaintext: Any plaintext format
+
+
+                      URL: A URL to a website, PDF, image, or video
+
+
+                      We automatically detect the content type from the url's
+                      response format.
+                    example: >-
+                      This is a detailed article about machine learning
+                      concepts...
+              customId:
+                allOf:
+                  - type: string
+                    description: >-
+                      Optional custom ID of the memory. This could be an ID from
+                      your database that will uniquely identify this memory.
+                    example: mem_abc123
+              metadata:
+                allOf:
+                  - type: object
+                    additionalProperties:
+                      anyOf:
+                        - type: string
+                        - type: number
+                        - type: boolean
+                    description: >-
+                      Optional metadata for the memory. This is used to store
+                      additional information about the memory. You can use this
+                      to store any additional information you need about the
+                      memory. Metadata can be filtered through. Keys must be
+                      strings and are case sensitive. Values can be strings,
+                      numbers, or booleans. You cannot nest objects.
+                    example:
+                      category: technology
+                      isPublic: true
+                      readingTime: 5
+                      source: web
+                      tag_1: ai
+                      tag_2: machine-learning
+        examples:
+          example:
+            value:
+              containerTags:
+                - user_123
+                - project_123
+              content: This is a detailed article about machine learning concepts...
+              customId: mem_abc123
+              metadata:
+                category: technology
+                isPublic: true
+                readingTime: 5
+                source: web
+                tag_1: ai
+                tag_2: machine-learning
+    codeSamples:
+      - lang: JavaScript
+        source: |-
+          import Supermemory from 'supermemory';
+
+          const client = new Supermemory({
+            apiKey: 'My API Key',
+          });
+
+          const response = await client.memories.add();
+
+          console.log(response.id);
+      - lang: Python
+        source: |-
+          from supermemory import Supermemory
+
+          client = Supermemory(
+              api_key="My API Key",
+          )
+          response = client.memories.add()
+          print(response.id)
+  response:
+    '200':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              id:
+                allOf:
+                  - type: string
+              status:
+                allOf:
+                  - type: string
+            requiredProperties:
+              - id
+              - status
+        examples:
+          example:
+            value:
+              id: <string>
+              status: <string>
+        description: Memory added successfully
+    '401':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              details:
+                allOf:
+                  - type: string
+                    description: Additional error details
+                    example: Query must be at least 1 character long
+              error:
+                allOf:
+                  - type: string
+                    description: Error message
+                    example: Invalid request parameters
+            requiredProperties:
+              - error
+        examples:
+          example:
+            value:
+              details: Query must be at least 1 character long
+              error: Invalid request parameters
+        description: Unauthorized
+    '500':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              details:
+                allOf:
+                  - type: string
+                    description: Additional error details
+                    example: Query must be at least 1 character long
+              error:
+                allOf:
+                  - type: string
+                    description: Error message
+                    example: Invalid request parameters
+            requiredProperties:
+              - error
+        examples:
+          example:
+            value:
+              details: Query must be at least 1 character long
+              error: Invalid request parameters
+        description: Internal server error
+  deprecated: false
+  type: path
+components:
+  schemas: {}
+
+````

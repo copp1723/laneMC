@@ -1,0 +1,415 @@
+# Get memory
+
+> Get a memory by ID
+
+## OpenAPI
+
+````yaml https://app.stainless.com/api/spec/documented/supermemory-new/openapi.documented.yml get /v3/memories/{id}
+paths:
+  path: /v3/memories/{id}
+  method: get
+  servers:
+    - url: https://api.supermemory.ai
+      description: Production Server
+  request:
+    security:
+      - title: bearerAuth
+        parameters:
+          query: {}
+          header:
+            Authorization:
+              type: http
+              scheme: bearer
+          cookie: {}
+    parameters:
+      path:
+        id:
+          schema:
+            - type: string
+              required: true
+      query: {}
+      header: {}
+      cookie: {}
+    body: {}
+    codeSamples:
+      - lang: JavaScript
+        source: |-
+          import Supermemory from 'supermemory';
+
+          const client = new Supermemory({
+            apiKey: 'My API Key',
+          });
+
+          const memory = await client.memories.get('id');
+
+          console.log(memory.id);
+      - lang: Python
+        source: |-
+          from supermemory import Supermemory
+
+          client = Supermemory(
+              api_key="My API Key",
+          )
+          memory = client.memories.get(
+              "id",
+          )
+          print(memory.id)
+  response:
+    '200':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              connectionId:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+                      - 'null'
+                    minLength: 22
+                    maxLength: 22
+                    description: >-
+                      Optional ID of connection the memory was created from.
+                      This is useful for identifying the source of the memory.
+                    example: conn_123
+              content:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+                    description: >-
+                      The content to extract and process into a memory. This can
+                      be a URL to a website, a PDF, an image, or a video. 
+
+
+                      Plaintext: Any plaintext format
+
+
+                      URL: A URL to a website, PDF, image, or video
+
+
+                      We automatically detect the content type from the url's
+                      response format.
+                    examples:
+                      - >-
+                        This is a detailed article about machine learning
+                        concepts...
+                      - https://example.com/article
+                      - https://youtube.com/watch?v=abc123
+                      - https://example.com/audio.mp3
+                      - https://aws-s3.com/bucket/file.pdf
+                      - https://example.com/image.jpg
+              createdAt:
+                allOf:
+                  - type: string
+                    description: Creation timestamp
+                    example: '1970-01-01T00:00:00.000Z'
+                    format: date-time
+              customId:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+                    maxLength: 255
+                    description: >-
+                      Optional custom ID of the memory. This could be an ID from
+                      your database that will uniquely identify this memory.
+                    example: mem_abc123
+              id:
+                allOf:
+                  - type: string
+                    minLength: 22
+                    maxLength: 22
+                    description: Unique identifier of the memory.
+                    example: acxV5LHMEsG2hMSNb4umbn
+              metadata:
+                allOf:
+                  - anyOf:
+                      - anyOf:
+                          - type: string
+                          - type: number
+                          - type: boolean
+                          - type: 'null'
+                      - type: object
+                        additionalProperties: {}
+                      - type: array
+                        items: {}
+                      - type: 'null'
+                    description: >-
+                      Optional metadata for the memory. This is used to store
+                      additional information about the memory. You can use this
+                      to store any additional information you need about the
+                      memory. Metadata can be filtered through. Keys must be
+                      strings and are case sensitive. Values can be strings,
+                      numbers, or booleans. You cannot nest objects.
+                    example:
+                      category: technology
+                      isPublic: true
+                      readingTime: 5
+                      source: web
+                      tag_1: ai
+                      tag_2: machine-learning
+              ogImage:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+              raw:
+                allOf:
+                  - type: 'null'
+                    description: Raw content of the memory
+                    example: >-
+                      This is a detailed article about machine learning
+                      concepts...
+              source:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+                    maxLength: 255
+                    description: Source of the memory
+                    example: web
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - unknown
+                      - queued
+                      - extracting
+                      - chunking
+                      - embedding
+                      - indexing
+                      - done
+                      - failed
+                    description: Status of the memory
+                    example: done
+              summary:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+                    description: Summary of the memory content
+                    example: >-
+                      A comprehensive guide to understanding the basics of
+                      machine learning and its applications.
+              summaryEmbeddingModel:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+              summaryEmbeddingNew:
+                allOf:
+                  - type:
+                      - array
+                      - 'null'
+                    items:
+                      type: number
+                    minItems: 1536
+                    maxItems: 1536
+              summaryEmbeddingModelNew:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+              title:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+                    description: Title of the memory
+                    example: Introduction to Machine Learning
+              type:
+                allOf:
+                  - type: string
+                    enum:
+                      - text
+                      - pdf
+                      - tweet
+                      - google_doc
+                      - google_slide
+                      - google_sheet
+                      - image
+                      - video
+                      - notion_doc
+                      - webpage
+                      - onedrive
+                    description: Type of the memory
+                    example: text
+              updatedAt:
+                allOf:
+                  - type: string
+                    description: Last update timestamp
+                    example: '1970-01-01T00:00:00.000Z'
+                    format: date-time
+              url:
+                allOf:
+                  - type:
+                      - string
+                      - 'null'
+                      - 'null'
+                    description: URL of the memory
+                    example: https://example.com/article
+              containerTags:
+                allOf:
+                  - type: array
+                    items:
+                      type: string
+                    description: >-
+                      Optional tags this memory should be containerized by. This
+                      can be an ID for your user, a project ID, or any other
+                      identifier you wish to use to group memories.
+                    example:
+                      - user_123
+                      - project_123
+            description: Memory object
+            requiredProperties:
+              - connectionId
+              - content
+              - createdAt
+              - customId
+              - id
+              - metadata
+              - ogImage
+              - source
+              - status
+              - summary
+              - summaryEmbeddingModel
+              - summaryEmbeddingNew
+              - summaryEmbeddingModelNew
+              - title
+              - type
+              - updatedAt
+            example:
+              connectionId: conn_123
+              containerTags:
+                - user_123
+                - project_123
+              content: This is a detailed article about machine learning concepts...
+              createdAt: '1970-01-01T00:00:00.000Z'
+              customId: mem_abc123
+              id: acxV5LHMEsG2hMSNb4umbn
+              metadata:
+                category: technology
+                isPublic: true
+                readingTime: 5
+                source: web
+                tag_1: ai
+                tag_2: machine-learning
+              ogImage: https://example.com/image.jpg
+              raw: This is a detailed article about machine learning concepts...
+              source: web
+              status: done
+              summary: >-
+                A comprehensive guide to understanding the basics of machine
+                learning and its applications.
+              title: Introduction to Machine Learning
+              tokenCount: 1000
+              type: text
+              updatedAt: '1970-01-01T00:00:00.000Z'
+              url: https://example.com/article
+        examples:
+          example:
+            value:
+              connectionId: conn_123
+              containerTags:
+                - user_123
+                - project_123
+              content: This is a detailed article about machine learning concepts...
+              createdAt: '1970-01-01T00:00:00.000Z'
+              customId: mem_abc123
+              id: acxV5LHMEsG2hMSNb4umbn
+              metadata:
+                category: technology
+                isPublic: true
+                readingTime: 5
+                source: web
+                tag_1: ai
+                tag_2: machine-learning
+              ogImage: https://example.com/image.jpg
+              raw: This is a detailed article about machine learning concepts...
+              source: web
+              status: done
+              summary: >-
+                A comprehensive guide to understanding the basics of machine
+                learning and its applications.
+              title: Introduction to Machine Learning
+              tokenCount: 1000
+              type: text
+              updatedAt: '1970-01-01T00:00:00.000Z'
+              url: https://example.com/article
+        description: Successfully retrieved memory
+    '401':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              details:
+                allOf:
+                  - type: string
+                    description: Additional error details
+                    example: Query must be at least 1 character long
+              error:
+                allOf:
+                  - type: string
+                    description: Error message
+                    example: Invalid request parameters
+            requiredProperties:
+              - error
+        examples:
+          example:
+            value:
+              details: Query must be at least 1 character long
+              error: Invalid request parameters
+        description: Unauthorized
+    '404':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              details:
+                allOf:
+                  - type: string
+                    description: Additional error details
+                    example: Query must be at least 1 character long
+              error:
+                allOf:
+                  - type: string
+                    description: Error message
+                    example: Invalid request parameters
+            requiredProperties:
+              - error
+        examples:
+          example:
+            value:
+              details: Query must be at least 1 character long
+              error: Invalid request parameters
+        description: Memory not found
+    '500':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              details:
+                allOf:
+                  - type: string
+                    description: Additional error details
+                    example: Query must be at least 1 character long
+              error:
+                allOf:
+                  - type: string
+                    description: Error message
+                    example: Invalid request parameters
+            requiredProperties:
+              - error
+        examples:
+          example:
+            value:
+              details: Query must be at least 1 character long
+              error: Invalid request parameters
+        description: Internal server error
+  deprecated: false
+  type: path
+components:
+  schemas: {}
+
+````
