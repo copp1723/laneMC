@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
 import AccountSettings from "@/pages/AccountSettings";
+import MemoryManagement from "@/pages/memory-management";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/login" component={Login} />
       <Route path="/account-settings" component={AccountSettings} />
+      <Route path="/memory-management" component={MemoryManagement} />
       <Route component={NotFound} />
     </Switch>
   );

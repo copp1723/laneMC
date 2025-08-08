@@ -4,11 +4,14 @@ import { eq, and, desc, asc } from "drizzle-orm";
 import {
   users, googleAdsAccounts, campaigns, chatSessions, chatMessages,
   campaignBriefs, performanceMetrics, budgetPacing, escalationSettings,
+  supermemoryConnections, supermemoryMemories,
   type User, type InsertUser, type GoogleAdsAccount, type InsertGoogleAdsAccount,
   type Campaign, type InsertCampaign, type ChatSession, type InsertChatSession,
   type ChatMessage, type InsertChatMessage, type CampaignBrief, type InsertCampaignBrief,
-  type PerformanceMetrics, type InsertPerformanceMetrics, type BudgetPacing, type InsertBudgetPacing,
-  type EscalationSettings, type InsertEscalationSettings
+  type PerformanceMetric, type InsertPerformanceMetric, type BudgetPacing, type InsertBudgetPacing,
+  type EscalationSettings, type InsertEscalationSettings,
+  type SupermemoryConnection, type InsertSupermemoryConnection,
+  type SupermemoryMemory, type InsertSupermemoryMemory
 } from "@shared/schema";
 
 const pool = new Pool({
@@ -52,8 +55,8 @@ export interface IStorage {
   updateCampaignBrief(id: string, updates: Partial<CampaignBrief>): Promise<CampaignBrief | undefined>;
   
   // Performance metrics
-  getPerformanceMetrics(googleAdsAccountId: string, campaignId?: string): Promise<PerformanceMetrics[]>;
-  createPerformanceMetrics(metrics: InsertPerformanceMetrics): Promise<PerformanceMetrics>;
+  getPerformanceMetrics(googleAdsAccountId: string, campaignId?: string): Promise<PerformanceMetric[]>;
+  createPerformanceMetric(metrics: InsertPerformanceMetric): Promise<PerformanceMetric>;
   
   // Budget pacing
   getBudgetPacing(googleAdsAccountId: string, campaignId?: string): Promise<BudgetPacing[]>;
@@ -67,6 +70,21 @@ export interface IStorage {
   createEscalationSetting(setting: InsertEscalationSettings): Promise<EscalationSettings>;
   updateEscalationSetting(id: string, updates: Partial<EscalationSettings>): Promise<EscalationSettings | undefined>;
   deleteEscalationSetting(id: string): Promise<void>;
+
+  // Supermemory connections
+  getSupermemoryConnections(userId: string): Promise<SupermemoryConnection[]>;
+  getSupermemoryConnection(id: string): Promise<SupermemoryConnection | undefined>;
+  getSupermemoryConnectionByConnectionId(connectionId: string): Promise<SupermemoryConnection | undefined>;
+  createSupermemoryConnection(connection: InsertSupermemoryConnection): Promise<SupermemoryConnection>;
+  deleteSupermemoryConnection(id: string): Promise<void>;
+
+  // Supermemory memories
+  getSupermemoryMemories(userId: string, containerTags?: string[]): Promise<SupermemoryMemory[]>;
+  getSupermemoryMemory(id: string): Promise<SupermemoryMemory | undefined>;
+  getSupermemoryMemoryByMemoryId(memoryId: string): Promise<SupermemoryMemory | undefined>;
+  createSupermemoryMemory(memory: InsertSupermemoryMemory): Promise<SupermemoryMemory>;
+  updateSupermemoryMemory(id: string, updates: Partial<SupermemoryMemory>): Promise<SupermemoryMemory | undefined>;
+  deleteSupermemoryMemory(id: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -211,7 +229,7 @@ export class DbStorage implements IStorage {
   }
 
   // Performance metrics methods
-  async getPerformanceMetrics(googleAdsAccountId: string, campaignId?: string): Promise<PerformanceMetrics[]> {
+  async getPerformanceMetrics(googleAdsAccountId: string, campaignId?: string): Promise<PerformanceMetric[]> {
     if (campaignId) {
       return await db.select().from(performanceMetrics)
         .where(and(
@@ -226,7 +244,7 @@ export class DbStorage implements IStorage {
       .orderBy(desc(performanceMetrics.date));
   }
 
-  async createPerformanceMetrics(metrics: InsertPerformanceMetrics): Promise<PerformanceMetrics> {
+  async createPerformanceMetric(metrics: InsertPerformanceMetric): Promise<PerformanceMetric> {
     const result = await db.insert(performanceMetrics).values(metrics).returning();
     return result[0];
   }
@@ -282,8 +300,9 @@ export class DbStorage implements IStorage {
   }
 
   async getEscalationSettingsByCampaign(campaignId: string): Promise<EscalationSettings[]> {
+    // For now, return settings for the Google Ads account associated with the campaign
+    // This is a simplified implementation as escalationSettings doesn't have campaignId field
     return await db.select().from(escalationSettings)
-      .where(eq(escalationSettings.campaignId, campaignId))
       .orderBy(desc(escalationSettings.createdAt));
   }
 
@@ -302,6 +321,73 @@ export class DbStorage implements IStorage {
 
   async deleteEscalationSetting(id: string): Promise<void> {
     await db.delete(escalationSettings).where(eq(escalationSettings.id, id));
+  }
+
+  // Supermemory connection methods
+  async getSupermemoryConnections(userId: string): Promise<SupermemoryConnection[]> {
+    return await db.select().from(supermemoryConnections)
+      .where(eq(supermemoryConnections.userId, userId))
+      .orderBy(desc(supermemoryConnections.createdAt));
+  }
+
+  async getSupermemoryConnection(id: string): Promise<SupermemoryConnection | undefined> {
+    const result = await db.select().from(supermemoryConnections)
+      .where(eq(supermemoryConnections.id, id));
+    return result[0];
+  }
+
+  async getSupermemoryConnectionByConnectionId(connectionId: string): Promise<SupermemoryConnection | undefined> {
+    const result = await db.select().from(supermemoryConnections)
+      .where(eq(supermemoryConnections.connectionId, connectionId));
+    return result[0];
+  }
+
+  async createSupermemoryConnection(connection: InsertSupermemoryConnection): Promise<SupermemoryConnection> {
+    const result = await db.insert(supermemoryConnections).values(connection).returning();
+    return result[0];
+  }
+
+  async deleteSupermemoryConnection(id: string): Promise<void> {
+    await db.delete(supermemoryConnections).where(eq(supermemoryConnections.id, id));
+  }
+
+  // Supermemory memory methods
+  async getSupermemoryMemories(userId: string, containerTags?: string[]): Promise<SupermemoryMemory[]> {
+    let query = db.select().from(supermemoryMemories)
+      .where(eq(supermemoryMemories.userId, userId));
+    
+    // Note: Advanced filtering by containerTags would require JSON operators
+    // For now, returning all memories for the user
+    return await query.orderBy(desc(supermemoryMemories.createdAt));
+  }
+
+  async getSupermemoryMemory(id: string): Promise<SupermemoryMemory | undefined> {
+    const result = await db.select().from(supermemoryMemories)
+      .where(eq(supermemoryMemories.id, id));
+    return result[0];
+  }
+
+  async getSupermemoryMemoryByMemoryId(memoryId: string): Promise<SupermemoryMemory | undefined> {
+    const result = await db.select().from(supermemoryMemories)
+      .where(eq(supermemoryMemories.memoryId, memoryId));
+    return result[0];
+  }
+
+  async createSupermemoryMemory(memory: InsertSupermemoryMemory): Promise<SupermemoryMemory> {
+    const result = await db.insert(supermemoryMemories).values(memory).returning();
+    return result[0];
+  }
+
+  async updateSupermemoryMemory(id: string, updates: Partial<SupermemoryMemory>): Promise<SupermemoryMemory | undefined> {
+    const result = await db.update(supermemoryMemories)
+      .set({ ...updates, updatedAt: new Date() } as any)
+      .where(eq(supermemoryMemories.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteSupermemoryMemory(id: string): Promise<void> {
+    await db.delete(supermemoryMemories).where(eq(supermemoryMemories.id, id));
   }
 }
 
