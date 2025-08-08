@@ -2,10 +2,17 @@
 
 ## Step-by-Step Process to Generate Valid Refresh Token
 
-### 1. Open Google OAuth2 Playground
+### 1. ✅ OAuth Authentication Now Working!
+**Status**: Your refresh token is working perfectly! 
+
+The OAuth authentication has been successfully configured and is now obtaining access tokens from Google. Lane MCP is making live Google Ads API requests.
+
+**Next step**: We need to sync your actual Google Ads customer accounts instead of using test data.
+
+### 2. Open Google OAuth2 Playground
 Go to: https://developers.google.com/oauthplayground/
 
-### 2. Configure OAuth2 Playground Settings
+### 3. Configure OAuth2 Playground Settings
 1. Click the **Settings** gear icon (top right)
 2. Check **"Use your own OAuth credentials"**
 3. Enter your credentials:
@@ -49,11 +56,30 @@ After updating the refresh token, you should see:
 
 ## Troubleshooting
 
+If you get "The OAuth client was not found" in OAuth2 Playground:
+1. **Missing Redirect URI**: Add `https://developers.google.com/oauthplayground` to Authorized redirect URIs
+2. **OAuth Client Type**: Ensure it's configured as "Web application" (not Desktop app)
+3. **Project Settings**: Verify Google Ads API is enabled in your Google Cloud project
+4. **Consent Screen**: Ensure OAuth consent screen is published (not in testing mode)
+
 If you still get "invalid_client" after updating the refresh token:
 1. Verify the OAuth Client ID exactly matches what's in Google Cloud Console
-2. Check that Google Ads API is enabled in your Google Cloud project
+2. Double-check the client secret is copied correctly
 3. Ensure your OAuth consent screen includes the Google Ads API scope
 4. Confirm the OAuth client is not in "Testing" mode (should be "Published")
+
+## Alternative Method: Manual Authorization Flow
+
+If OAuth2 Playground continues to have issues, you can generate the refresh token manually:
+
+1. Create this authorization URL (replace YOUR_CLIENT_ID):
+```
+https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=https://www.googleapis.com/auth/adwords&response_type=code&access_type=offline&prompt=consent
+```
+
+2. Visit the URL in your browser and grant permissions
+3. Copy the authorization code from the response
+4. Exchange it for tokens using a POST request to `https://oauth2.googleapis.com/token`
 
 ## Security Note
 The refresh token provides ongoing access to your Google Ads accounts. Keep it secure and never share it publicly.
