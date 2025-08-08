@@ -112,7 +112,7 @@ class GoogleAdsService {
       console.log(`Making Google Ads API request to: ${endpoint}`);
       const response = await axios({
         method: data ? 'POST' : 'GET',
-        url: `https://googleads.googleapis.com/${this.apiVersion}/${endpoint}`,
+        url: `https://googleads.googleapis.com/${endpoint}`,
         headers,
         data,
       });
@@ -236,7 +236,7 @@ class GoogleAdsService {
       WHERE customer.id = ${customerId}
     `;
 
-    const response = await this.makeRequest(`customers/${customerId}/googleAds:search`, {
+    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
       query,
     }, customerId);
 
@@ -265,7 +265,7 @@ class GoogleAdsService {
       WHERE campaign.status IN ('ENABLED', 'PAUSED')
     `;
 
-    const response = await this.makeRequest(`customers/${customerId}/googleAds:search`, {
+    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
       query,
     }, customerId);
 
@@ -302,7 +302,7 @@ class GoogleAdsService {
       AND segments.date DURING ${dateRange}
     `;
 
-    const response = await this.makeRequest(`customers/${customerId}/googleAds:search`, {
+    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
       query,
     }, customerId);
 
