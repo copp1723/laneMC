@@ -84,6 +84,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Test live Google Ads connection endpoint
+  app.get("/api/google-ads/test-live", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      console.log('Testing live Google Ads connection...');
+      console.log('Environment:', process.env.ENVIRONMENT);
+      console.log('Has credentials:', {
+        clientId: !!process.env.GOOGLE_ADS_CLIENT_ID,
+        clientSecret: !!process.env.GOOGLE_ADS_CLIENT_SECRET,
+        developerToken: !!process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+        refreshToken: !!process.env.GOOGLE_ADS_REFRESH_TOKEN,
+        loginCustomerId: !!process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID
+      });
+      
+      // Temporarily force live mode for this test
+      const originalIsMock = (googleAdsService as any).isMockMode;
+      (googleAdsService as any).isMockMode = false;
+      
+      const accounts = await googleAdsService.getAccessibleCustomers();
+      
+      // Restore original mode
+      (googleAdsService as any).isMockMode = originalIsMock;
+      
+      res.json({ 
+        success: true, 
+        message: 'Live Google Ads connection successful!',
+        mode: 'LIVE',
+        accountCount: accounts.length,
+        accounts: accounts.slice(0, 5),
+        credentials: {
+          clientId: !!process.env.GOOGLE_ADS_CLIENT_ID,
+          clientSecret: !!process.env.GOOGLE_ADS_CLIENT_SECRET,
+          developerToken: !!process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+          refreshToken: !!process.env.GOOGLE_ADS_REFRESH_TOKEN,
+          loginCustomerId: !!process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID
+        }
+      });
+    } catch (error: any) {
+      console.error('Live Google Ads connection test failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message,
+        message: 'Failed to connect to live Google Ads accounts',
+        mode: 'LIVE'
+      });
+    }
+  });
+
   // Google Ads Account routes
   app.get("/api/google-ads/accounts", authenticateToken, async (req: AuthRequest, res) => {
     try {
