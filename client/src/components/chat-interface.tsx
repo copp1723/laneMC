@@ -236,14 +236,14 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
           </Button>
         </form>
 
-        {/* Quick Actions */}
-        <div className="flex flex-wrap gap-2 mt-3">
+        {/* Quick Actions - Compact */}
+        <div className="flex flex-wrap gap-1.5 mt-2">
           {quickActions.map((action) => (
             <Button
               key={action.id}
               variant="outline"
               size="sm"
-              className="text-xs"
+              className="text-xs px-2 py-1 h-7"
               onClick={() => handleQuickAction(action.action)}
               disabled={isStreaming}
             >
@@ -252,22 +252,24 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
           ))}
         </div>
 
-        {/* Campaign Brief Generator */}
-        {selectedClient && currentSessionId && messages.length >= 3 && (
-          <div className="mt-6 pt-6 border-t border-slate-200">
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                <Rocket className="w-4 h-4" />
-                Generate Campaign Brief
-              </h3>
-              <p className="text-xs text-slate-600 mt-1">
-                Convert this conversation into a structured campaign brief
-              </p>
-            </div>
-            <CampaignBriefGenerator
-              sessionId={currentSessionId}
-              accountId={selectedClient.id}
-            />
+        {/* Campaign Brief Generator - Minimized */}
+        {selectedClient && currentSessionId && messages.length >= 5 && (
+          <div className="mt-3 pt-2 border-t border-slate-100">
+            <details className="group">
+              <summary className="cursor-pointer list-none flex items-center justify-between p-1.5 hover:bg-gray-50 rounded text-xs">
+                <div className="flex items-center gap-1.5">
+                  <Rocket className="w-3 h-3 text-blue-600" />
+                  <span className="font-medium text-slate-700">Campaign Brief</span>
+                </div>
+                <div className="text-xs text-slate-400 group-open:hidden">Expand</div>
+              </summary>
+              <div className="mt-2 p-2 bg-gray-50 rounded border text-sm">
+                <CampaignBriefGenerator
+                  sessionId={currentSessionId}
+                  accountId={selectedClient.id}
+                />
+              </div>
+            </details>
           </div>
         )}
       </div>
