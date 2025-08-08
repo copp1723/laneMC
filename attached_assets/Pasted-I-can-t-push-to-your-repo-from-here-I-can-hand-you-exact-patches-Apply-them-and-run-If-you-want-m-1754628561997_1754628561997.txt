@@ -1,0 +1,613 @@
+I can’t push to your repo from here. I can hand you exact patches. Apply them and run. If you want me to open a PR, give me a temp branch + write access or drop me a GitHub Codespace link.
+
+Below are unified diffs for the four highest-impact files.
+
+⸻
+
+Patch 1 — server/services/google-ads.ts
+
+Fix GAQL WHERE bug, normalize versioned endpoints, correct headers, add retries/timeouts.
+
+*** a/server/services/google-ads.ts
+--- b/server/services/google-ads.ts
+@@
+-  private apiVersion: string = 'v15';
+-  private baseUrl: string = 'https://googleads.googleapis.com';
++  private apiVersion: string = 'v15';
++  private baseUrl: string = 'https://googleads.googleapis.com';
+@@
+-  private async makeRequest(endpoint: string, data?: any, customerId?: string): Promise<any> {
+-    const accessToken = await this.getAccessToken();
+-    const headers: any = {
+-      'Authorization': `Bearer ${accessToken}`,
+-      'developer-token': this.developerToken,
+-      'Content-Type': 'application/json',
+-    };
+-
+-    // Use login customer ID for manager account access
+-    if (this.loginCustomerId) {
+-      headers['login-customer-id'] = this.loginCustomerId;
+-    }
+-
+-    // Override with specific customer ID if provided
+-    if (customerId) {
+-      headers['login-customer-id'] = customerId;
+-    }
+-
+-    try {
+-      console.log(`Making Google Ads API request to: ${endpoint}`);
+-      const response = await axios({
+-        method: data ? 'POST' : 'GET',
+-        url: `https://googleads.googleapis.com/${endpoint}`,
+-        headers,
+-        data,
+-      });
+-      console.log('Google Ads API request successful');
+-      return response.data;
+-    } catch (error: any) {
+-      console.error('Google Ads API error:', error.response?.data || error.message);
+-      throw new Error(`Google Ads API error: ${error.response?.data?.error?.message || error.message}`);
+-    }
+-  }
++  private async makeRequest(endpoint: string, data?: any): Promise<any> {
++    const accessToken = await this.getAccessToken();
++    const headers: Record<string,string> = {
++      Authorization: `Bearer ${accessToken}`,
++      'developer-token': this.developerToken,
++      'Content-Type': 'application/json',
++    };
++    if (this.loginCustomerId) headers['login-customer-id'] = this.loginCustomerId; // manager stays here
++
++    const url = `${this.baseUrl}/${endpoint}`;
++    const max = 5;
++    for (let i = 0; i < max; i++) {
++      try {
++        const resp = await axios({
++          method: data ? 'POST' : 'GET',
++          url,
++          headers,
++          data,
++          timeout: 20000
++        });
++        return resp.data;
++      } catch (e: any) {
++        const status = e?.response?.status;
++        const retryable = [429,500,502,503,504].includes(status);
++        if (!retryable || i === max - 1) {
++          console.error('Google Ads API error:', e.response?.data || e.message);
++          throw new Error(`Google Ads API error: ${e.response?.data?.error?.message || e.message}`);
++        }
++        await new Promise(r => setTimeout(r, 250 * Math.pow(2,i) + Math.random()*200));
++      }
++    }
++  }
+@@
+-  async getAccessibleCustomers(): Promise<string[]> {
++  async getAccessibleCustomers(): Promise<string[]> {
+@@
+-      const response = await axios.get(`https://googleads.googleapis.com/v15/customers:listAccessibleCustomers`, {
+-        headers: {
+-          'Authorization': `Bearer ${accessToken}`,
+-          'developer-token': this.developerToken,
+-          'Content-Type': 'application/json',
+-        },
+-      });
++      const response = await axios.get(`${this.baseUrl}/${this.apiVersion}/customers:listAccessibleCustomers`, {
++        headers: {
++          Authorization: `Bearer ${accessToken}`,
++          'developer-token': this.developerToken,
++          'Content-Type': 'application/json',
++        },
++      });
+@@
+-  async getCustomerInfo(customerId: string): Promise<GoogleAdsClient> {
++  async getCustomerInfo(customerId: string): Promise<GoogleAdsClient> {
+@@
+-    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
+-      query,
+-    }, customerId);
++    const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
+@@
+-  async getCampaigns(customerId: string): Promise<GoogleAdsCampaign[]> {
++  async getCampaigns(customerId: string): Promise<GoogleAdsCampaign[]> {
+@@
+-    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
+-      query,
+-    }, customerId);
++    const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
+@@
+-  async getPerformanceMetrics(
+-    customerId: string,
+-    campaignId?: string,
+-    dateRange: string = 'LAST_7_DAYS'
+-  ): Promise<GoogleAdsMetrics> {
+-    let whereClause = '';
+-    if (campaignId) {
+-      whereClause = `WHERE campaign.id = ${campaignId}`;
+-    }
+-
+-    const query = `
+-      SELECT 
+-        metrics.impressions,
+-        metrics.clicks,
+-        metrics.conversions,
+-        metrics.cost_micros,
+-        metrics.ctr,
+-        metrics.average_cpc,
+-        metrics.conversions_from_interactions_rate
+-      FROM campaign 
+-      ${whereClause}
+-      AND segments.date DURING ${dateRange}
+-    `;
+-
+-    const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
+-      query,
+-    }, customerId);
++  async getPerformanceMetrics(customerId: string, campaignId?: string, dateRange: string = 'LAST_7_DAYS'): Promise<GoogleAdsMetrics> {
++    const filters: string[] = [`segments.date DURING ${dateRange}`];
++    if (campaignId) filters.unshift(`campaign.id = ${campaignId}`);
++    const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
++    const query = `
++      SELECT 
++        metrics.impressions,
++        metrics.clicks,
++        metrics.conversions,
++        metrics.cost_micros,
++        metrics.ctr,
++        metrics.average_cpc,
++        metrics.conversions_from_interactions_rate
++      FROM campaign
++      ${where}
++    `;
++    const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
+@@
+-    return {
++    return {
+       impressions: totals.impressions,
+       clicks: totals.clicks,
+       conversions: totals.conversions,
+       cost: totals.cost,
+-      ctr: totals.clicks > 0 ? (totals.clicks / totals.impressions) : 0,
+-      cpc: totals.clicks > 0 ? (totals.cost / totals.clicks) : 0,
+-      conversionRate: totals.clicks > 0 ? (totals.conversions / totals.clicks) : 0,
++      ctr: totals.impressions > 0 ? (totals.clicks / totals.impressions) : 0,
++      cpc: totals.clicks > 0 ? (totals.cost / totals.clicks) : 0,
++      conversionRate: totals.clicks > 0 ? (totals.conversions / totals.clicks) : 0,
+     };
+   }
+@@
+-    const response = await this.makeRequest(
+-      `customers/${customerId}/campaigns:mutate`,
++    const response = await this.makeRequest(
++      `${this.apiVersion}/customers/${customerId}/campaigns:mutate`,
+       campaign,
+-      customerId
+     );
+@@
+-      `customers/${customerId}/campaignBudgets:mutate`,
++      `${this.apiVersion}/customers/${customerId}/campaignBudgets:mutate`,
+       budget,
+-      customerId
+     );
+@@
+-    const campaignResponse = await this.makeRequest(
+-      `customers/${customerId}/googleAds:search`,
+-      { query: campaignQuery },
+-      customerId
+-    );
++    const campaignResponse = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query: campaignQuery });
+@@
+-      await this.makeRequest(
+-        `customers/${customerId}/campaignBudgets:mutate`,
+-        budgetUpdate,
+-        customerId
+-      );
++      await this.makeRequest(`${this.apiVersion}/customers/${customerId}/campaignBudgets:mutate`, budgetUpdate);
+     }
+   }
+@@
+-      const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
+-        query
+-      }, customerId);
++      const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
+@@
+-      const response = await this.makeRequest(`v15/customers/${customerId}/googleAds:search`, {
+-        query
+-      }, customerId);
++      const response = await this.makeRequest(`${this.apiVersion}/customers/${customerId}/googleAds:search`, { query });
+
+
+⸻
+
+Patch 2 — server/services/automation-engine.ts
+
+Add per-account locks + concurrency, stable windows, JSON-schema insights.
+
+*** a/server/services/automation-engine.ts
+--- b/server/services/automation-engine.ts
+@@
+ export class AutomationEngine {
+   private isRunning = false;
+   private monitoringInterval = 30 * 60 * 1000; // 30 minutes
+   private intervalId: NodeJS.Timeout | null = null;
++  private accountLocks = new Set<string>();
++  private MAX_CONCURRENCY = 3;
+@@
+-    this.intervalId = setInterval(() => {
+-      this.runAutomationCycle().catch(console.error);
+-    }, this.monitoringInterval);
++    this.intervalId = setInterval(() => { this.runAutomationCycle().catch(console.error); }, this.monitoringInterval);
+@@
+-  private async runAutomationCycle(): Promise<void> {
++  private async runAutomationCycle(): Promise<void> {
+     try {
+       console.log('🔄 Running automation cycle...');
+-      
+-      // Get all active Google Ads accounts
+-      const accounts = await storage.getAllGoogleAdsAccounts();
+-      
+-      for (const account of accounts) {
+-        if (!account.isActive) continue;
+-        
+-        await this.processAccountAutomation(account.id, account.customerId);
+-      }
++      const accounts = (await storage.getAllGoogleAdsAccounts()).filter((a:any) => a.isActive);
++      const queue = [...accounts];
++      const workers = Array.from({ length: this.MAX_CONCURRENCY }, () => this.worker(queue));
++      await Promise.all(workers);
+       
+-      console.log(`✅ Automation cycle completed for ${accounts.length} accounts`);
++      console.log(`✅ Automation cycle completed for ${accounts.length} accounts`);
+     } catch (error) {
+       console.error('❌ Automation cycle failed:', error);
+     }
+   }
++
++  private async worker(queue: any[]): Promise<void> {
++    for (;;) {
++      const account = queue.pop();
++      if (!account) return;
++      if (this.accountLocks.has(account.id)) continue;
++      this.accountLocks.add(account.id);
++      try {
++        await this.processAccountAutomation(account.id, account.customerId);
++      } finally {
++        this.accountLocks.delete(account.id);
++      }
++    }
++  }
+@@
+-  private async syncPerformanceData(accountId: string, customerId: string): Promise<void> {
++  private async syncPerformanceData(accountId: string, customerId: string): Promise<void> {
+     try {
+       // Get campaigns for this account
+       const campaigns = await googleAdsService.getCampaigns(customerId);
+       
+       for (const campaign of campaigns) {
+         // Get performance metrics
+-        const metrics = await googleAdsService.getPerformanceMetrics(
+-          customerId,
+-          campaign.id,
+-          'TODAY'
+-        );
++        const metrics = await googleAdsService.getPerformanceMetrics(customerId, campaign.id, 'YESTERDAY');
+         
+         // Store in database
+         await storage.createPerformanceMetric({
+           googleAdsAccountId: accountId,
+           campaignId: campaign.id,
+           date: new Date(),
+-          impressions: metrics.impressions.toString(),
+-          clicks: metrics.clicks.toString(),
+-          conversions: metrics.conversions.toString(),
+-          cost: metrics.cost.toString(),
+-          ctr: metrics.ctr.toString(),
+-          cpc: metrics.cpc.toString(),
+-          conversionRate: metrics.conversionRate.toString(),
++          impressions: metrics.impressions,
++          clicks: metrics.clicks,
++          conversions: metrics.conversions,
++          cost: metrics.cost,
++          ctr: metrics.ctr,
++          cpc: metrics.cpc,
++          conversionRate: metrics.conversionRate,
+         });
+       }
+     } catch (error) {
+       console.error('Failed to sync performance data:', error);
+     }
+   }
+@@
+-  private async generatePerformanceInsights(accountId: string, customerId: string): Promise<void> {
++  private async generatePerformanceInsights(accountId: string, customerId: string): Promise<void> {
+     try {
+       // Get recent performance data
+       const metrics = await storage.getPerformanceMetrics(accountId);
+       
+       if (metrics.length === 0) return;
+       
+       // Generate AI insights using OpenRouter
+       const performanceData = metrics.slice(0, 10); // Last 10 data points
+-      
+-      const prompt = `Analyze this Google Ads performance data and provide 3 actionable insights:
++      const prompt = `Analyze this Google Ads performance data and provide 3 actionable insights strictly as valid JSON matching:
++type Insight = { type: "opportunity"|"warning"|"optimization"; title: string; description: string; impact: "high"|"medium"|"low"; actionable: boolean };
++type InsightPayload = { _version: "v1"; insights: Insight[] };
+ 
+-Performance Data:
++Performance Data:
+ ${performanceData.map(m => `Date: ${m.date}, Spend: $${m.cost}, Clicks: ${m.clicks}, Conversions: ${m.conversions}, CPC: $${m.cpc}`).join('\n')}
+ 
+-Provide insights in this JSON format:
+-{
+-  "insights": [
+-    {
+-      "type": "opportunity|warning|optimization",
+-      "title": "Brief insight title",
+-      "description": "Detailed analysis and recommendation",
+-      "impact": "high|medium|low",
+-      "actionable": true/false
+-    }
+-  ]
+-}`;
++Only output JSON.`;
+ 
+-      let fullResponse = '';
+-      
+-      await new Promise<void>((resolve, reject) => {
+-        openRouterService.streamChatCompletion(
+-          [{ role: 'user', content: prompt }],
+-          (chunk) => { fullResponse += chunk; },
+-          () => resolve(),
+-          (error) => reject(error)
+-        );
+-      });
++      const json = await openRouterService.completeJson({
++        system: 'You are a strict JSON generator. If validation fails, fix and re-output.',
++        user: prompt,
++        schemaName: 'InsightPayload'
++      });
+ 
+-      // Process insights (would typically store in database or send notifications)
++      // Process insights (store/notify)
+       console.log(`💡 Generated performance insights for account ${accountId}`);
+       
+     } catch (error) {
+       console.error('Failed to generate performance insights:', error);
+     }
+   }
+ }
+
+If you don’t have openRouterService.completeJson, I can drop in a 40-line helper with zod validation and 2 retries.
+
+⸻
+
+Patch 3 — server/services/budget-pacing.ts
+
+Single campaign fetch, three time windows, guard band, underspend alerts, budget clamping.
+
+*** a/server/services/budget-pacing.ts
+--- b/server/services/budget-pacing.ts
+@@
+-  private async checkAccountBudgets(account: GoogleAdsAccount): Promise<void> {
++  private async checkAccountBudgets(account: GoogleAdsAccount): Promise<void> {
+     try {
+-      // Get campaigns for this account
+-      const campaigns = await googleAdsService.getCampaigns(account.customerId);
+-      
+-      for (const campaign of campaigns) {
+-        await this.checkCampaignBudget(account, campaign.id);
+-      }
++      const campaigns = await googleAdsService.getCampaigns(account.customerId);
++      for (const campaign of campaigns) await this.checkCampaignBudget(account, campaign.id, campaign);
+     } catch (error) {
+       console.error(`Error checking budgets for account ${account.id}:`, error);
+     }
+   }
+ 
+-  async checkCampaignBudget(account: GoogleAdsAccount, campaignId: string): Promise<PacingResult> {
++  async checkCampaignBudget(account: GoogleAdsAccount, campaignId: string, campaignObj?: any): Promise<PacingResult> {
+     try {
+-      // Get performance metrics for analysis
+-      const currentMetrics = await googleAdsService.getPerformanceMetrics(
+-        account.customerId, 
+-        campaignId, 
+-        'THIS_MONTH'
+-      );
+-
+-      const historicalMetrics = await googleAdsService.getPerformanceMetrics(
+-        account.customerId, 
+-        campaignId, 
+-        'LAST_30_DAYS'
+-      );
+-
+-      // Get campaign details for budget information
+-      const campaigns = await googleAdsService.getCampaigns(account.customerId);
+-      const campaign = campaigns.find(c => c.id === campaignId);
++      // Metrics windows: yesterday for pace, mtd for guardrails, 30d for trend
++      const yesterday = await googleAdsService.getPerformanceMetrics(account.customerId, campaignId, 'YESTERDAY');
++      const mtd       = await googleAdsService.getPerformanceMetrics(account.customerId, campaignId, 'THIS_MONTH');
++      const hist30    = await googleAdsService.getPerformanceMetrics(account.customerId, campaignId, 'LAST_30_DAYS');
++
++      // Budget info
++      const campaign = campaignObj ?? (await googleAdsService.getCampaigns(account.customerId)).find(c => c.id === campaignId);
+       
+       if (!campaign) {
+         throw new Error(`Campaign ${campaignId} not found`);
+       }
+ 
+-      const monthlyBudget = typeof campaign.budget === 'string' ? parseFloat(campaign.budget) : campaign.budget;
+-      const currentSpend = currentMetrics.cost;
++      const monthlyBudget = typeof campaign.budget === 'string' ? parseFloat(campaign.budget) : campaign.budget;
++      const currentSpend = mtd.cost;
+@@
+-      const pacingAnalysis = this.calculateIntelligentPacing({
+-        currentSpend,
+-        monthlyBudget,
+-        daysElapsed,
+-        daysRemaining,
+-        totalDaysInMonth,
+-        currentMetrics,
+-        historicalMetrics,
+-        campaign
+-      });
++      const pacingAnalysis = this.calculateIntelligentPacing({
++        currentSpend,
++        monthlyBudget,
++        daysElapsed,
++        daysRemaining,
++        totalDaysInMonth,
++        currentMetrics: mtd,
++        historicalMetrics: hist30,
++        campaign
++      });
+@@
+-      const alerts = this.checkBudgetAlerts(account, campaignId, result, monthlyBudget);
++      const alerts = this.checkBudgetAlerts(account, campaignId, result, monthlyBudget);
+@@
+       return result;
+     } catch (error) {
+       console.error(`Error checking budget for campaign ${campaignId}:`, error);
+       throw error;
+     }
+   }
+@@
+     // Determine pacing status
+     let status = BudgetStatus.ON_TRACK;
+     if (currentSpend >= monthlyBudget * this.pacingParams.emergencyPauseThreshold) {
+       status = BudgetStatus.EXHAUSTED;
+     } else if (spendVariance > this.pacingParams.volatilityThreshold) {
+       status = BudgetStatus.OVERSPENDING;
+     } else if (spendVariance < -this.pacingParams.volatilityThreshold) {
+       status = BudgetStatus.UNDERSPENDING;
+     } else if (linearProjectedSpend > monthlyBudget * 0.95) {
+       status = BudgetStatus.AT_RISK;
+     }
+@@
+   private checkBudgetAlerts(
+     account: GoogleAdsAccount,
+     campaignId: string,
+     pacingResult: PacingResult,
+     budgetLimit: number
+   ): BudgetAlert[] {
+     const alerts: BudgetAlert[] = [];
+@@
+     } else if (pacingResult.pacingStatus === BudgetStatus.OVERSPENDING) {
+       alerts.push({
+         id: `${campaignId}_overspend_${Date.now()}`,
+         campaignId,
+         alertType: "overspending",
+         severity: "high",
+         message: `Campaign is overspending`,
+         currentSpend: pacingResult.currentSpend,
+         budgetLimit,
+         projectedSpend: pacingResult.projectedSpend,
+         recommendedAction: "Reduce daily budget or pause low-performing keywords",
+         timestamp: new Date()
+       });
+     }
++    // Underspend alert
++    if (pacingResult.pacingStatus === BudgetStatus.UNDERSPENDING && pacingResult.projectedSpend < budgetLimit * 0.85) {
++      alerts.push({
++        id: `${campaignId}_underspend_${Date.now()}`,
++        campaignId,
++        alertType: "underspending",
++        severity: "medium",
++        message: `Campaign is likely to underspend the monthly budget`,
++        currentSpend: pacingResult.currentSpend,
++        budgetLimit,
++        projectedSpend: pacingResult.projectedSpend,
++        recommendedAction: "Increase daily budget or expand targeting",
++        timestamp: new Date()
++      });
++    }
+     return alerts;
+   }
+
+Also add a no-op band where you currently auto-adjust budgets (in AutomationEngine.checkBudgetPacing), before calling updateCampaignBudget:
+
+-        if (pacingResult.adjustmentFactor > 1.2 || pacingResult.adjustmentFactor < 0.8) {
++        const delta = Math.abs(pacingResult.adjustmentFactor - 1);
++        if (delta >= 0.2) {
+           const newBudget = pacingResult.recommendedBudget;
+           ...
+
+And clamp to tenant min/max if you store those:
+
+const bounds = { min: account.minDailyBudget ?? 5, max: account.maxDailyBudget ?? 5000 };
+const newBudget = Math.max(bounds.min, Math.min(bounds.max, pacingResult.recommendedBudget));
+
+
+⸻
+
+Patch 4 — server/services/scheduler.ts
+
+Stop DIY cron; add jitter and simple visibility timeout.
+
+*** a/server/services/scheduler.ts
+--- b/server/services/scheduler.ts
+@@
++import parser from 'cron-parser';
+@@
+-  private async scheduleTask(task: ScheduledTask): Promise<void> {
++  private async scheduleTask(task: ScheduledTask): Promise<void> {
+     if (!task.enabled) return;
+-
+-    const nextRun = this.calculateNextRun(task.schedule);
++    const nextRun = this.calculateNextRun(task.schedule);
+     task.nextRun = nextRun;
+-
+-    const delay = nextRun.getTime() - Date.now();
++    // add small jitter (±20s) to avoid herds
++    const jitter = (Math.random() - 0.5) * 40000;
++    const delay = Math.max(0, nextRun.getTime() - Date.now() + jitter);
+@@
+-  private calculateNextRun(schedule: string): Date {
+-    // Simplified cron parser - in production would use a proper cron library
+-    const now = new Date();
+-    
+-    // Parse basic cron expressions
+-    if (schedule === '0 */2 * * *') { // Every 2 hours
+-      const next = new Date(now);
+-      next.setHours(now.getHours() + 2, 0, 0, 0);
+-      return next;
+-    }
+-    ...
+-    // Default: 1 hour from now
+-    const next = new Date(now);
+-    next.setHours(now.getHours() + 1);
+-    return next;
+-  }
++  private calculateNextRun(schedule: string): Date {
++    const it = parser.parseExpression(schedule, { currentDate: new Date() });
++    return it.next().toDate();
++  }
+
+Optional: mark long-running tasks as timed out and requeue if status==='running' for >N minutes.
+
+⸻
+
+Cleanup — duplicate analytics file
+
+You pasted CampaignAnalyticsService twice. Ensure there’s one source of truth at server/services/campaign-analytics.ts. Delete the duplicate to avoid shadow imports.
+
+⸻
+
+Apply + verify
+
+git checkout -b harden-google-automation
+git apply <<'PATCH'
+# (paste Patch 1..4 in order)
+PATCH
+
+pnpm i cron-parser --save
+pnpm build
+pnpm test   # if you’ve got tests; if not, I’ll add smoke tests next
+
+Smoke checks to run manually:
+	•	Start the engine; verify getPerformanceMetrics works for both single campaign and “all campaigns” (no GAQL syntax errors).
+	•	Trigger scheduler.runTaskNow('budget_pacing_check') and confirm no duplicate budget calls.
+	•	Flip a campaign to tiny budget and confirm overspend/underspend alerts fire.
+	•	Kill network while running; verify Google Ads requests backoff and recover.
+
+If you want me to wire the completeJson helper and add small unit tests for the GAQL builder and pacing math, say the word and I’ll drop those in next.

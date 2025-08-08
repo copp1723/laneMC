@@ -12,7 +12,8 @@ import {
   LogOut,
   Bot,
   Zap,
-  AlertTriangle
+  AlertTriangle,
+  Database
 } from 'lucide-react';
 import type { GoogleAdsAccount } from '@shared/schema';
 
@@ -22,6 +23,7 @@ const navigationItems = [
   { id: 'issue-detection', label: 'Issue Detection', icon: AlertTriangle },
   { id: 'campaign-briefs', label: 'Campaign Generator', icon: Bot },
   { id: 'performance', label: 'Performance Analytics', icon: BarChart3 },
+  { id: 'memory-management', label: 'Memory Management', icon: Database },
 ];
 
 interface SidebarProps {
@@ -80,8 +82,16 @@ export default function Sidebar({ selectedClient, onClientChange, activeView = '
         </ul>
       </nav>
 
-      {/* Account Settings Link */}
-      <div className="p-4 border-t border-slate-300">
+      {/* Additional Links */}
+      <div className="p-4 border-t border-slate-300 space-y-1">
+        <Link href="/memory-management">
+          <button
+            className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-slate-700 hover:bg-slate-200"
+          >
+            <Database className="w-5 h-5 mr-3" />
+            Memory Management
+          </button>
+        </Link>
         <Link href="/account-settings">
           <button
             className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-slate-700 hover:bg-slate-200"

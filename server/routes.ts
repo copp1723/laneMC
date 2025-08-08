@@ -8,7 +8,8 @@ import { openRouterService } from "./services/openrouter";
 import { budgetPacingService } from "./services/budget-pacing";
 import { issueDetectionService } from "./services/issue-detection";
 import { campaignBriefGeneratorService } from "./services/campaign-brief-generator";
-import { insertUserSchema, insertChatSessionSchema, insertChatMessageSchema, insertCampaignBriefSchema } from "@shared/schema";
+import { insertUserSchema, insertChatSessionSchema, insertChatMessageSchema, insertCampaignBriefSchema, insertSupermemoryConnectionSchema, insertSupermemoryMemorySchema } from "@shared/schema";
+import { supermemoryService } from "./services/supermemory";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -1123,6 +1124,271 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scheduler: "operational"
       }
     });
+  });
+
+  // Supermemory connection routes
+  app.get('/api/supermemory/connections', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const connections = await storage.getSupermemoryConnections(req.user!.id);
+      res.json(connections);
+    } catch (error: any) {
+      console.error('Error getting Supermemory connections:', error);
+      res.status(500).json({ error: 'Failed to get connections' });
+    }
+  });
+
+  app.post('/api/supermemory/connections', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { provider, accessToken, refreshToken, containerTags, documentLimit } = req.body;
+      
+      // Create connection via Supermemory API
+      const connectionId = await supermemoryService.createConnection({
+        provider,
+        accessToken,
+        refreshToken,
+        containerTags,
+        documentLimit
+      });
+
+      // Store connection in our database
+      const connection = await storage.createSupermemoryConnection({
+        userId: req.user!.id,
+        connectionId,
+        provider,
+        containerTags,
+        documentLimit,
+        metadata: { accessToken: !!accessToken, refreshToken: !!refreshToken }
+      });
+
+      res.json(connection);
+    } catch (error: any) {
+      console.error('Error creating Supermemory connection:', error);
+      res.status(500).json({ error: 'Failed to create connection' });
+    }
+  });
+
+  app.delete('/api/supermemory/connections/:connectionId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { connectionId } = req.params;
+      
+      // Find connection in our database
+      const connection = await storage.getSupermemoryConnectionByConnectionId(connectionId);
+      if (!connection || connection.userId !== req.user!.id) {
+        return res.status(404).json({ error: 'Connection not found' });
+      }
+
+      // Delete from Supermemory API
+      await supermemoryService.deleteConnection(connectionId, connection.containerTags as string[]);
+      
+      // Delete from our database
+      await storage.deleteSupermemoryConnection(connection.id);
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error deleting Supermemory connection:', error);
+      res.status(500).json({ error: 'Failed to delete connection' });
+    }
+  });
+
+  // Supermemory memory routes
+  app.get('/api/supermemory/memories', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { containerTags } = req.query;
+      const tagArray = containerTags ? (containerTags as string).split(',') : undefined;
+      
+      const memories = await storage.getSupermemoryMemories(req.user!.id, tagArray);
+      res.json(memories);
+    } catch (error: any) {
+      console.error('Error getting Supermemory memories:', error);
+      res.status(500).json({ error: 'Failed to get memories' });
+    }
+  });
+
+  app.post('/api/supermemory/memories', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { content, title, type, connectionId, containerTags, url, summary, customId } = req.body;
+      
+      // Add memory via Supermemory API
+      const memoryId = await supermemoryService.addMemory({
+        content,
+        title,
+        type,
+        connectionId,
+        containerTags,
+        url,
+        summary,
+        customId
+      });
+
+      // Store memory in our database
+      const memory = await storage.createSupermemoryMemory({
+        userId: req.user!.id,
+        memoryId,
+        customId,
+        connectionId,
+        title,
+        content,
+        summary,
+        url,
+        type: type || 'text',
+        status: 'processing',
+        containerTags,
+        metadata: { source: 'api' }
+      });
+
+      res.json(memory);
+    } catch (error: any) {
+      console.error('Error creating Supermemory memory:', error);
+      res.status(500).json({ error: 'Failed to create memory' });
+    }
+  });
+
+  app.get('/api/supermemory/memories/:memoryId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { memoryId } = req.params;
+      
+      // Find memory in our database
+      const localMemory = await storage.getSupermemoryMemoryByMemoryId(memoryId);
+      if (!localMemory || localMemory.userId !== req.user!.id) {
+        return res.status(404).json({ error: 'Memory not found' });
+      }
+
+      // Get updated memory from Supermemory API
+      const apiMemory = await supermemoryService.getMemory(memoryId);
+      
+      // Update local memory with latest data
+      await storage.updateSupermemoryMemory(localMemory.id, {
+        title: apiMemory.title,
+        content: apiMemory.content,
+        summary: apiMemory.summary,
+        status: apiMemory.status,
+        ogImage: apiMemory.og_image,
+        source: apiMemory.source
+      });
+
+      res.json({
+        ...localMemory,
+        ...apiMemory
+      });
+    } catch (error: any) {
+      console.error('Error getting Supermemory memory:', error);
+      res.status(500).json({ error: 'Failed to get memory' });
+    }
+  });
+
+  app.delete('/api/supermemory/memories/:memoryId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { memoryId } = req.params;
+      
+      // Find memory in our database
+      const memory = await storage.getSupermemoryMemoryByMemoryId(memoryId);
+      if (!memory || memory.userId !== req.user!.id) {
+        return res.status(404).json({ error: 'Memory not found' });
+      }
+
+      // Delete from Supermemory API
+      await supermemoryService.deleteMemory(memoryId);
+      
+      // Delete from our database
+      await storage.deleteSupermemoryMemory(memory.id);
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error deleting Supermemory memory:', error);
+      res.status(500).json({ error: 'Failed to delete memory' });
+    }
+  });
+
+  app.get('/api/supermemory/search', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { q, containerTags } = req.query;
+      
+      if (!q) {
+        return res.status(400).json({ error: 'Search query required' });
+      }
+
+      const tagArray = containerTags ? (containerTags as string).split(',') : undefined;
+      const results = await supermemoryService.searchMemories(q as string, tagArray);
+      
+      res.json(results);
+    } catch (error: any) {
+      console.error('Error searching Supermemory:', error);
+      res.status(500).json({ error: 'Failed to search memories' });
+    }
+  });
+
+  // Google Ads + Supermemory integration routes
+  app.post('/api/supermemory/campaign-data/:accountId/:campaignId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { accountId, campaignId } = req.params;
+      
+      // Get account and campaign data
+      const account = await storage.getGoogleAdsAccount(accountId);
+      if (!account || account.userId !== req.user!.id) {
+        return res.status(404).json({ error: 'Account not found' });
+      }
+
+      // Get campaign data from Google Ads API
+      const campaigns = await googleAdsService.getCampaigns(account.customerId);
+      const campaign = campaigns.find(c => c.id === campaignId);
+      
+      if (!campaign) {
+        return res.status(404).json({ error: 'Campaign not found' });
+      }
+
+      // Store campaign data in Supermemory
+      const memoryId = await supermemoryService.addCampaignMemory(
+        campaign,
+        accountId,
+        account.customerId
+      );
+
+      res.json({ 
+        success: true, 
+        memoryId,
+        message: 'Campaign data stored in Supermemory'
+      });
+    } catch (error: any) {
+      console.error('Error storing campaign data in Supermemory:', error);
+      res.status(500).json({ error: 'Failed to store campaign data' });
+    }
+  });
+
+  app.post('/api/supermemory/performance-data/:accountId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { accountId } = req.params;
+      const { campaignId, dateRange } = req.body;
+      
+      // Get account
+      const account = await storage.getGoogleAdsAccount(accountId);
+      if (!account || account.userId !== req.user!.id) {
+        return res.status(404).json({ error: 'Account not found' });
+      }
+
+      // Get performance data from Google Ads API
+      const metrics = await googleAdsService.getPerformanceMetrics(
+        account.customerId,
+        campaignId,
+        dateRange || 'LAST_30_DAYS'
+      );
+
+      // Store performance data in Supermemory
+      const memoryId = await supermemoryService.addPerformanceMemory(
+        metrics,
+        accountId,
+        account.customerId,
+        campaignId
+      );
+
+      res.json({ 
+        success: true, 
+        memoryId,
+        message: 'Performance data stored in Supermemory'
+      });
+    } catch (error: any) {
+      console.error('Error storing performance data in Supermemory:', error);
+      res.status(500).json({ error: 'Failed to store performance data' });
+    }
   });
 
   return httpServer;

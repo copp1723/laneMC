@@ -112,6 +112,40 @@ export const escalationSettings = pgTable("escalation_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Supermemory Integration Tables
+export const supermemoryConnections = pgTable("supermemory_connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  connectionId: text("connection_id").notNull().unique(), // from Supermemory API
+  provider: text("provider").notNull(), // notion, google-drive, onedrive
+  email: text("email"),
+  documentLimit: integer("document_limit"),
+  metadata: jsonb("metadata"),
+  containerTags: jsonb("container_tags"), // array of tags for grouping
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const supermemoryMemories = pgTable("supermemory_memories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  memoryId: text("memory_id").notNull().unique(), // from Supermemory API
+  customId: text("custom_id"), // optional custom ID
+  connectionId: text("connection_id"), // reference to connection
+  title: text("title"),
+  content: text("content"),
+  summary: text("summary"),
+  source: text("source"),
+  url: text("url"),
+  ogImage: text("og_image"),
+  type: text("type").notNull(), // text, pdf, tweet, etc.
+  status: text("status").default("unknown"), // processing status
+  metadata: jsonb("metadata"),
+  containerTags: jsonb("container_tags"), // array of tags for filtering
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertGoogleAdsAccountSchema = createInsertSchema(googleAdsAccounts).omit({ id: true, createdAt: true });
@@ -122,23 +156,30 @@ export const insertCampaignBriefSchema = createInsertSchema(campaignBriefs).omit
 export const insertPerformanceMetricsSchema = createInsertSchema(performanceMetrics).omit({ id: true });
 export const insertBudgetPacingSchema = createInsertSchema(budgetPacing).omit({ id: true });
 export const insertEscalationSettingsSchema = createInsertSchema(escalationSettings).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSupermemoryConnectionSchema = createInsertSchema(supermemoryConnections).omit({ id: true, createdAt: true });
+export const insertSupermemoryMemorySchema = createInsertSchema(supermemoryMemories).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
 export type GoogleAdsAccount = typeof googleAdsAccounts.$inferSelect;
-export type InsertGoogleAdsAccount = z.infer<typeof insertGoogleAdsAccountSchema>;
 export type Campaign = typeof campaigns.$inferSelect;
-export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
 export type ChatSession = typeof chatSessions.$inferSelect;
-export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
-export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type CampaignBrief = typeof campaignBriefs.$inferSelect;
-export type InsertCampaignBrief = z.infer<typeof insertCampaignBriefSchema>;
-export type PerformanceMetrics = typeof performanceMetrics.$inferSelect;
-export type InsertPerformanceMetrics = z.infer<typeof insertPerformanceMetricsSchema>;
+export type PerformanceMetric = typeof performanceMetrics.$inferSelect;
 export type BudgetPacing = typeof budgetPacing.$inferSelect;
-export type InsertBudgetPacing = z.infer<typeof insertBudgetPacingSchema>;
 export type EscalationSettings = typeof escalationSettings.$inferSelect;
+export type SupermemoryConnection = typeof supermemoryConnections.$inferSelect;
+export type SupermemoryMemory = typeof supermemoryMemories.$inferSelect;
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertGoogleAdsAccount = z.infer<typeof insertGoogleAdsAccountSchema>;
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type InsertCampaignBrief = z.infer<typeof insertCampaignBriefSchema>;
+export type InsertPerformanceMetric = z.infer<typeof insertPerformanceMetricsSchema>;
+export type InsertBudgetPacing = z.infer<typeof insertBudgetPacingSchema>;
 export type InsertEscalationSettings = z.infer<typeof insertEscalationSettingsSchema>;
+export type InsertSupermemoryConnection = z.infer<typeof insertSupermemoryConnectionSchema>;
+export type InsertSupermemoryMemory = z.infer<typeof insertSupermemoryMemorySchema>;
