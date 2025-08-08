@@ -18,7 +18,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { username, email, password } = insertUserSchema.parse(req.body);
-      
+
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
@@ -33,17 +33,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const token = generateToken(user.id);
-      res.json({ 
-        token, 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          email: user.email, 
-          role: user.role 
-        } 
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
       });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      // Handle Zod validation errors
+      if (error.name === 'ZodError') {
+        const firstError = error.errors[0];
+        const fieldName = firstError.path.join('.');
+        return res.status(400).json({
+          message: `${fieldName}: ${firstError.message}`
+        });
+      }
+
+      console.error('Registration error:', error);
+      res.status(400).json({ message: error.message || 'Registration failed' });
     }
   });
 
@@ -60,17 +70,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const token = generateToken(user.id);
-      res.json({ 
-        token, 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          email: user.email, 
-          role: user.role 
-        } 
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
       });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      // Handle Zod validation errors
+      if (error.name === 'ZodError') {
+        const firstError = error.errors[0];
+        const fieldName = firstError.path.join('.');
+        return res.status(400).json({
+          message: `${fieldName}: ${firstError.message}`
+        });
+      }
+
+      console.error('Login error:', error);
+      res.status(400).json({ message: error.message || 'Login failed' });
     }
   });
 

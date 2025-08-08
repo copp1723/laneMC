@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { initializeDatabase } from "./db-init";
 
 const app = express();
 app.use(express.json());
@@ -37,8 +38,18 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database schema first
+  if (process.env.DATABASE_URL) {
+    try {
+      await initializeDatabase();
+    } catch (error) {
+      console.error('Failed to initialize database:', error);
+      // Continue anyway - the app might still work if tables exist
+    }
+  }
+
   const server = await registerRoutes(app);
-  
+
   // Start automation engine in production
   if (process.env.ENVIRONMENT === 'production') {
     const { automationEngine } = await import('./services/automation-engine');
