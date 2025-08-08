@@ -80,13 +80,29 @@ export async function streamChatMessage(
 
       buffer += decoder.decode(value, { stream: true });
       
-      // Process complete chunks
-      const chunks = buffer.split('');
-      buffer = '';
+      // Process complete chunks separated by newlines
+      const chunks = buffer.split('\n');
+      buffer = chunks.pop() || ''; // Keep incomplete chunk in buffer
       
       for (const chunk of chunks) {
-        if (chunk) {
-          onChunk(chunk);
+        if (chunk.trim()) {
+          try {
+            // Parse JSON chunk if it's a data event
+            if (chunk.startsWith('data: ')) {
+              const data = chunk.slice(6);
+              if (data === '[DONE]') {
+                onComplete();
+                return;
+              }
+              onChunk(data);
+            } else if (chunk.trim()) {
+              // Plain text chunk
+              onChunk(chunk);
+            }
+          } catch (e) {
+            // If not JSON, treat as plain text
+            onChunk(chunk);
+          }
         }
       }
     }
