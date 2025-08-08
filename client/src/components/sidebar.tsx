@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { Link } from 'wouter';
 import ClientSelector from '@/components/client-selector';
 import { 
   MessageSquare, 
@@ -86,13 +87,14 @@ export default function Sidebar({ selectedClient, onClientChange, activeView = '
 
       {/* Account Settings Link */}
       <div className="p-4 border-t border-slate-300">
-        <button
-          onClick={() => window.location.href = '/account-settings'}
-          className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-slate-700 hover:bg-slate-200"
-        >
-          <Settings className="w-5 h-5 mr-3" />
-          Account Settings
-        </button>
+        <Link href="/account-settings">
+          <button
+            className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-slate-700 hover:bg-slate-200"
+          >
+            <Settings className="w-5 h-5 mr-3" />
+            Account Settings
+          </button>
+        </Link>
       </div>
 
       {/* User Profile */}
