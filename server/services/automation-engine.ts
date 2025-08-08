@@ -12,6 +12,8 @@ export class AutomationEngine {
   private isRunning = false;
   private monitoringInterval = 30 * 60 * 1000; // 30 minutes
   private intervalId: NodeJS.Timeout | null = null;
+  private accountLocks = new Set<string>();
+  private MAX_CONCURRENCY = 3;
 
   async start(): Promise<void> {
     if (this.isRunning) {
@@ -26,9 +28,7 @@ export class AutomationEngine {
     
     // Start main automation loop
     this.isRunning = true;
-    this.intervalId = setInterval(() => {
-      this.runAutomationCycle().catch(console.error);
-    }, this.monitoringInterval);
+    this.intervalId = setInterval(() => { this.runAutomationCycle().catch(console.error); }, this.monitoringInterval);
 
     // Run initial cycle
     await this.runAutomationCycle();
@@ -58,19 +58,28 @@ export class AutomationEngine {
   private async runAutomationCycle(): Promise<void> {
     try {
       console.log('🔄 Running automation cycle...');
-      
-      // Get all active Google Ads accounts
-      const accounts = await storage.getAllGoogleAdsAccounts();
-      
-      for (const account of accounts) {
-        if (!account.isActive) continue;
-        
-        await this.processAccountAutomation(account.id, account.customerId);
-      }
+      const accounts = (await storage.getAllGoogleAdsAccounts()).filter((a:any) => a.isActive);
+      const queue = [...accounts];
+      const workers = Array.from({ length: this.MAX_CONCURRENCY }, () => this.worker(queue));
+      await Promise.all(workers);
       
       console.log(`✅ Automation cycle completed for ${accounts.length} accounts`);
     } catch (error) {
       console.error('❌ Automation cycle failed:', error);
+    }
+  }
+
+  private async worker(queue: any[]): Promise<void> {
+    for (;;) {
+      const account = queue.pop();
+      if (!account) return;
+      if (this.accountLocks.has(account.id)) continue;
+      this.accountLocks.add(account.id);
+      try {
+        await this.processAccountAutomation(account.id, account.customerId);
+      } finally {
+        this.accountLocks.delete(account.id);
+      }
     }
   }
 
@@ -97,11 +106,7 @@ export class AutomationEngine {
       
       for (const campaign of campaigns) {
         // Get performance metrics
-        const metrics = await googleAdsService.getPerformanceMetrics(
-          customerId,
-          campaign.id,
-          'TODAY'
-        );
+        const metrics = await googleAdsService.getPerformanceMetrics(customerId, campaign.id, 'YESTERDAY');
         
         // Store in database
         await storage.createPerformanceMetric({
@@ -130,11 +135,14 @@ export class AutomationEngine {
         const account = await storage.getGoogleAdsAccount(accountId);
         if (!account) continue;
         
-        const pacingResult = await budgetPacingService.checkCampaignBudget(account, campaign.id);
+        const pacingResult = await budgetPacingService.checkCampaignBudget(account, campaign.id, campaign);
         
-        // Auto-adjust budget if significantly off-pace
-        if (pacingResult.adjustmentFactor > 1.2 || pacingResult.adjustmentFactor < 0.8) {
-          const newBudget = pacingResult.recommendedBudget;
+        // Auto-adjust budget if significantly off-pace 
+        const delta = Math.abs(pacingResult.adjustmentFactor - 1);
+        if (delta >= 0.2) {
+          // Apply budget bounds if available
+          const bounds = { min: 5, max: 5000 }; // Default bounds
+          const newBudget = Math.max(bounds.min, Math.min(bounds.max, pacingResult.recommendedBudget));
           
           console.log(`🔧 Auto-adjusting budget for campaign ${campaign.id}: $${campaign.budget} → $${newBudget}`);
           
