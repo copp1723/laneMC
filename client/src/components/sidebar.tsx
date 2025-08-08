@@ -21,12 +21,6 @@ const navigationItems = [
   { id: 'budget-pacing', label: 'Smart Budget Pacing', icon: TrendingUp },
   { id: 'issue-detection', label: 'Issue Detection', icon: AlertTriangle },
   { id: 'campaign-briefs', label: 'Campaign Generator', icon: Bot },
-  { id: 'automation', label: 'Automation', icon: Zap },
-  { id: 'campaigns', label: 'Campaigns', icon: BarChart3 },
-  { id: 'performance', label: 'Performance', icon: TrendingUp },
-  { id: 'approvals', label: 'Approvals', icon: CheckCircle },
-  { id: 'escalation', label: 'Escalation', icon: Settings },
-  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 interface SidebarProps {
