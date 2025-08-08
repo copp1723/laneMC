@@ -192,7 +192,7 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
           </div>
         ))}
 
-        {/* Streaming message */}
+        {/* Streaming message with loading indicator */}
         {isStreaming && (
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -200,10 +200,21 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
             </div>
             <div className="max-w-[85%]">
               <div className="bg-slate-100 rounded-lg p-4">
-                <p className="text-sm text-slate-700 whitespace-pre-wrap">
-                  {streamingMessage}
-                  <span className="inline-block w-2 h-4 bg-slate-400 ml-1 animate-pulse" />
-                </p>
+                {streamingMessage ? (
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                    {streamingMessage}
+                    <span className="inline-block w-2 h-4 bg-slate-400 ml-1 animate-pulse" />
+                  </p>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                    </div>
+                    <span className="text-sm text-slate-500">Thinking...</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -231,8 +242,17 @@ export default function ChatInterface({ selectedClient, onSessionChange }: ChatI
             disabled={!input.trim() || isStreaming}
             className="px-6 py-3 flex items-center space-x-2"
           >
-            <span>Send</span>
-            <Send className="w-4 h-4" />
+            {isStreaming ? (
+              <>
+                <span>Sending...</span>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </>
+            ) : (
+              <>
+                <span>Send</span>
+                <Send className="w-4 h-4" />
+              </>
+            )}
           </Button>
         </form>
 

@@ -1,0 +1,234 @@
+phone calls
+
+Just now
+Thanks — that helps. Below is a compact, operational plan focused on maximizing phone-call volume and quality with your $20k/month budget. I’ve included the minimum clarifying questions I still need, a short diagnosis/risks, a prioritized prescription, and the required dry-run JSON artifacts. Nothing here will write to your account — I’ll wait for your explicit approval and the confirm_writes: true flag before any live changes.
+
+1) Quick confirmations I still need (3 items)
+- Primary geo: what is the primary DMA or target radius (city + miles) you want to cover? Example: "Chicago metro / 30 mi".
+- Inventory focus (top 1–3 models / new vs used mix): e.g., "New: Corolla, RAV4; Used: SUVs high-margin."
+- Is call tracking already set up with Google forwarding numbers & a Google Ads Call Conversion action for calls from ads? (yes / no)
+
+2) Diagnosis — top risks & opportunities
+- Risks
+  - Missing or misconfigured call conversion tracking → bidding will be ineffective for call-focused goals.
+  - No Google forwarding number or no CRM offline import → poor measurement of lead→sale value.
+  - Over-reliance on Performance Max without assets or feed can reduce control over call-generating queries.
+- Opportunities (fast wins)
+  - Call-only ads, call extensions & schedule bid adjustments during hours of live agents increase calls fast.
+  - Brand defense + high-intent model keywords capture low-cost callers.
+  - Maximize Conversions targeted on call conversions for initial learning then move to tCPA when volume is stable.
+
+3) Prescribed plan (concise)
+- Overall: Prioritize Search (call-focused) + Performance Max (inventory reach) + Service campaign. Use call-only ads + call extensions and schedule ad delivery to dealer hours. Start with Maximize Conversions (calls) for 2–4 weeks then move to tCPA when you have ~50–100 call conversions in 30 days.
+- Budget split (monthly $20,000 ≈ daily $667)
+  - Brand Search (protect): 15% → $100/day
+  - High-intent Non-Brand by model (lead gen): 45% → $300/day
+  - Service / Fixed Ops (appointments & calls): 15% → $100/day
+  - Performance Max (inventory+remarketing): 20% → $133/day
+  - Competitor (cautious): 5% → $34/day (low bids, strict negatives)
+- Targeting
+  - Primary DMA / radius per your answer. Exclude adjacent low-value zip codes if needed.
+  - Ad schedule: Bid up +50–100% during staffed hours; bid down/off when no phone coverage.
+- Tracking & Measurement
+  - Ensure Google forwarding number for ads + Call Conversion action (category: phone calls).
+  - Implement enhanced conversions for lead emails if available and plan for offline conversion import of closed deals.
+  - UTM scheme: utm_source=google&utm_medium=cpc&utm_campaign={campaign}&gclid if present.
+- Creative & Assets
+  - Call-first ad copy: lead with "Call Now" or "Speak to Sales" and include hours and model availability claims only if inventory verified and OEM-compliant.
+  - Call extensions and location extensions enabled.
+  - For PMax: supply 3–5 high-quality images per asset group and a short video (optional).
+- Bidding cadence
+  - Start: Maximize Conversions (with target CPA guard rails). Switch to tCPA after stable conversion volume.
+  - Set initial tCPA based on current CPA for phone leads (if unknown, use $40–$80 range as a default; confirm later).
+
+4) Priorities — ranked (what to do first)
+1. Verify & fix call tracking (Google forwarding numbers + call conversion) — highest ROI.
+2. Launch call-first Search campaigns & adjust ad schedule to live agent hours.
+3. Add high-intent model keyword groups & negatives; protect brand terms.
+4. Enable Performance Max with inventory-aligned asset groups (feed if available).
+5. Implement enhanced conversions & plan offline import.
+
+5) Measurement & cadence
+- Immediate metrics to watch (daily → weekly)
+  - Calls from ads (count), % calls answered, avg call duration, cost per call
+  - Clicks → call conversion rate, impression share on brand
+- Evaluation cadence
+  - First review: 7 days (tracking validation & early performance)
+  - Optimization window: 2–4 weeks (bidding learning)
+  - tCPA decision: after 30 days / ~50–100 conversions
+
+6) Compliance & OEM notes
+- Avoid unverified pricing, APR or guaranteed inventory claims. Use dealer-provided inventory and include required disclaimers when necessary.
+- Competitor keywords: use cautiously, ensure no trademark policy violations.
+
+7) Dry-run JSON artifacts (no writes). Review and approve before I proceed.
+
+plan: short narrative
+- Focus: phone calls as primary conversion. Priority fixes: call tracking, call-only Search campaigns, ad schedules, and PMax for inventory reach. Use Maximize Conversions for learning, migrate to tCPA after volume stabilizes. Protect brand and add strict negatives on low-value terms.
+
+brief: structured brief
+{
+  "objectives": {
+    "primary": "phone_calls",
+    "KPIs": ["calls_per_day","cost_per_call","call_answer_rate","call_to_appointment_rate"],
+    "target_cost_per_call": "TBD (default $40-80 until historic CPA provided)"
+  },
+  "budget": {
+    "monthly": 20000,
+   
+
+Just now
+Thanks — that helps. Below is a compact, operational plan focused on maximizing phone-call volume and quality with your $20k/month budget. I’ve included the minimum clarifying questions I still need, a short diagnosis/risks, a prioritized prescription, and the required dry-run JSON artifacts. Nothing here will write to your account — I’ll wait for your explicit approval and the confirm_writes: true flag before any live changes.
+
+1) Quick confirmations I still need (3 items)
+- Primary geo: what is the primary DMA or target radius (city + miles) you want to cover? Example: "Chicago metro / 30 mi".
+- Inventory focus (top 1–3 models / new vs used mix): e.g., "New: Corolla, RAV4; Used: SUVs high-margin."
+- Is call tracking already set up with Google forwarding numbers & a Google Ads Call Conversion action for calls from ads? (yes / no)
+
+2) Diagnosis — top risks & opportunities
+- Risks
+  - Missing or misconfigured call conversion tracking → bidding will be ineffective for call-focused goals.
+  - No Google forwarding number or no CRM offline import → poor measurement of lead→sale value.
+  - Over-reliance on Performance Max without assets or feed can reduce control over call-generating queries.
+- Opportunities (fast wins)
+  - Call-only ads, call extensions & schedule bid adjustments during hours of live agents increase calls fast.
+  - Brand defense + high-intent model keywords capture low-cost callers.
+  - Maximize Conversions targeted on call conversions for initial learning then move to tCPA when volume is stable.
+
+3) Prescribed plan (concise)
+- Overall: Prioritize Search (call-focused) + Performance Max (inventory reach) + Service campaign. Use call-only ads + call extensions and schedule ad delivery to dealer hours. Start with Maximize Conversions (calls) for 2–4 weeks then move to tCPA when you have ~50–100 call conversions in 30 days.
+- Budget split (monthly $20,000 ≈ daily $667)
+  - Brand Search (protect): 15% → $100/day
+  - High-intent Non-Brand by model (lead gen): 45% → $300/day
+  - Service / Fixed Ops (appointments & calls): 15% → $100/day
+  - Performance Max (inventory+remarketing): 20% → $133/day
+  - Competitor (cautious): 5% → $34/day (low bids, strict negatives)
+- Targeting
+  - Primary DMA / radius per your answer. Exclude adjacent low-value zip codes if needed.
+  - Ad schedule: Bid up +50–100% during staffed hours; bid down/off when no phone coverage.
+- Tracking & Measurement
+  - Ensure Google forwarding number for ads + Call Conversion action (category: phone calls).
+  - Implement enhanced conversions for lead emails if available and plan for offline conversion import of closed deals.
+  - UTM scheme: utm_source=google&utm_medium=cpc&utm_campaign={campaign}&gclid if present.
+- Creative & Assets
+  - Call-first ad copy: lead with "Call Now" or "Speak to Sales" and include hours and model availability claims only if inventory verified and OEM-compliant.
+  - Call extensions and location extensions enabled.
+  - For PMax: supply 3–5 high-quality images per asset group and a short video (optional).
+- Bidding cadence
+  - Start: Maximize Conversions (with target CPA guard rails). Switch to tCPA after stable conversion volume.
+  - Set initial tCPA based on current CPA for phone leads (if unknown, use $40–$80 range as a default; confirm later).
+
+4) Priorities — ranked (what to do first)
+1. Verify & fix call tracking (Google forwarding numbers + call conversion) — highest ROI.
+2. Launch call-first Search campaigns & adjust ad schedule to live agent hours.
+3. Add high-intent model keyword groups & negatives; protect brand terms.
+4. Enable Performance Max with inventory-aligned asset groups (feed if available).
+5. Implement enhanced conversions & plan offline import.
+
+5) Measurement & cadence
+- Immediate metrics to watch (daily → weekly)
+  - Calls from ads (count), % calls answered, avg call duration, cost per call
+  - Clicks → call conversion rate, impression share on brand
+- Evaluation cadence
+  - First review: 7 days (tracking validation & early performance)
+  - Optimization window: 2–4 weeks (bidding learning)
+  - tCPA decision: after 30 days / ~50–100 conversions
+
+6) Compliance & OEM notes
+- Avoid unverified pricing, APR or guaranteed inventory claims. Use dealer-provided inventory and include required disclaimers when necessary.
+- Competitor keywords: use cautiously, ensure no trademark policy violations.
+
+7) Dry-run JSON artifacts (no writes). Review and approve before I proceed.
+
+plan: short narrative
+- Focus: phone calls as primary conversion. Priority fixes: call tracking, call-only Search campaigns, ad schedules, and PMax for inventory reach. Use Maximize Conversions for learning, migrate to tCPA after volume stabilizes. Protect brand and add strict negatives on low-value terms.
+
+brief: structured brief
+{
+  "objectives": {
+    "primary": "phone_calls",
+    "KPIs": ["calls_per_day","cost_per_call","call_answer_rate","call_to_appointment_rate"],
+    "target_cost_per_call": "TBD (default $40-80 until historic CPA provided)"
+  },
+  "budget": {
+    "monthly": 20000,
+   
+
+Just now
+Thanks — that helps. Below is a compact, operational plan focused on maximizing phone-call volume and quality with your $20k/month budget. I’ve included the minimum clarifying questions I still need, a short diagnosis/risks, a prioritized prescription, and the required dry-run JSON artifacts. Nothing here will write to your account — I’ll wait for your explicit approval and the confirm_writes: true flag before any live changes.
+
+1) Quick confirmations I still need (3 items)
+- Primary geo: what is the primary DMA or target radius (city + miles) you want to cover? Example: "Chicago metro / 30 mi".
+- Inventory focus (top 1–3 models / new vs used mix): e.g., "New: Corolla, RAV4; Used: SUVs high-margin."
+- Is call tracking already set up with Google forwarding numbers & a Google Ads Call Conversion action for calls from ads? (yes / no)
+
+2) Diagnosis — top risks & opportunities
+- Risks
+  - Missing or misconfigured call conversion tracking → bidding will be ineffective for call-focused goals.
+  - No Google forwarding number or no CRM offline import → poor measurement of lead→sale value.
+  - Over-reliance on Performance Max without assets or feed can reduce control over call-generating queries.
+- Opportunities (fast wins)
+  - Call-only ads, call extensions & schedule bid adjustments during hours of live agents increase calls fast.
+  - Brand defense + high-intent model keywords capture low-cost callers.
+  - Maximize Conversions targeted on call conversions for initial learning then move to tCPA when volume is stable.
+
+3) Prescribed plan (concise)
+- Overall: Prioritize Search (call-focused) + Performance Max (inventory reach) + Service campaign. Use call-only ads + call extensions and schedule ad delivery to dealer hours. Start with Maximize Conversions (calls) for 2–4 weeks then move to tCPA when you have ~50–100 call conversions in 30 days.
+- Budget split (monthly $20,000 ≈ daily $667)
+  - Brand Search (protect): 15% → $100/day
+  - High-intent Non-Brand by model (lead gen): 45% → $300/day
+  - Service / Fixed Ops (appointments & calls): 15% → $100/day
+  - Performance Max (inventory+remarketing): 20% → $133/day
+  - Competitor (cautious): 5% → $34/day (low bids, strict negatives)
+- Targeting
+  - Primary DMA / radius per your answer. Exclude adjacent low-value zip codes if needed.
+  - Ad schedule: Bid up +50–100% during staffed hours; bid down/off when no phone coverage.
+- Tracking & Measurement
+  - Ensure Google forwarding number for ads + Call Conversion action (category: phone calls).
+  - Implement enhanced conversions for lead emails if available and plan for offline conversion import of closed deals.
+  - UTM scheme: utm_source=google&utm_medium=cpc&utm_campaign={campaign}&gclid if present.
+- Creative & Assets
+  - Call-first ad copy: lead with "Call Now" or "Speak to Sales" and include hours and model availability claims only if inventory verified and OEM-compliant.
+  - Call extensions and location extensions enabled.
+  - For PMax: supply 3–5 high-quality images per asset group and a short video (optional).
+- Bidding cadence
+  - Start: Maximize Conversions (with target CPA guard rails). Switch to tCPA after stable conversion volume.
+  - Set initial tCPA based on current CPA for phone leads (if unknown, use $40–$80 range as a default; confirm later).
+
+4) Priorities — ranked (what to do first)
+1. Verify & fix call tracking (Google forwarding numbers + call conversion) — highest ROI.
+2. Launch call-first Search campaigns & adjust ad schedule to live agent hours.
+3. Add high-intent model keyword groups & negatives; protect brand terms.
+4. Enable Performance Max with inventory-aligned asset groups (feed if available).
+5. Implement enhanced conversions & plan offline import.
+
+5) Measurement & cadence
+- Immediate metrics to watch (daily → weekly)
+  - Calls from ads (count), % calls answered, avg call duration, cost per call
+  - Clicks → call conversion rate, impression share on brand
+- Evaluation cadence
+  - First review: 7 days (tracking validation & early performance)
+  - Optimization window: 2–4 weeks (bidding learning)
+  - tCPA decision: after 30 days / ~50–100 conversions
+
+6) Compliance & OEM notes
+- Avoid unverified pricing, APR or guaranteed inventory claims. Use dealer-provided inventory and include required disclaimers when necessary.
+- Competitor keywords: use cautiously, ensure no trademark policy violations.
+
+7) Dry-run JSON artifacts (no writes). Review and approve before I proceed.
+
+plan: short narrative
+- Focus: phone calls as primary conversion. Priority fixes: call tracking, call-only Search campaigns, ad schedules, and PMax for inventory reach. Use Maximize Conversions for learning, migrate to tCPA after volume stabilizes. Protect brand and add strict negatives on low-value terms.
+
+brief: structured brief
+{
+  "objectives": {
+    "primary": "phone_calls",
+    "KPIs": ["calls_per_day","cost_per_call","call_answer_rate","call_to_appointment_rate"],
+    "target_cost_per_call": "TBD (default $40-80 until historic CPA provided)"
+  },
+  "budget": {
+    "monthly": 20000,
+   
+
+Just now
