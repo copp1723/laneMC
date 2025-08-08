@@ -21,6 +21,7 @@ const navigationItems = [
   { id: 'budget-pacing', label: 'Smart Budget Pacing', icon: TrendingUp },
   { id: 'issue-detection', label: 'Issue Detection', icon: AlertTriangle },
   { id: 'campaign-briefs', label: 'Campaign Generator', icon: Bot },
+  { id: 'performance', label: 'Performance Analytics', icon: BarChart3 },
 ];
 
 interface SidebarProps {
