@@ -23,7 +23,7 @@ class OpenRouterService extends EventEmitter {
   constructor() {
     super();
     this.apiKey = process.env.OPENROUTER_API_KEY || '';
-    this.defaultModel = process.env.OPENROUTER_DEFAULT_MODEL || 'openai/gpt-4o-mini';
+    this.defaultModel = process.env.OPENROUTER_DEFAULT_MODEL || 'openai/gpt-5-mini';
   }
 
   async streamChatCompletion(
