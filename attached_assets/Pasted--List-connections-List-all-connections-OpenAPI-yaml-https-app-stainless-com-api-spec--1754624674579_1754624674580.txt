@@ -1,0 +1,164 @@
+# List connections
+
+> List all connections
+
+## OpenAPI
+
+````yaml https://app.stainless.com/api/spec/documented/supermemory-new/openapi.documented.yml post /v3/connections/list
+paths:
+  path: /v3/connections/list
+  method: post
+  servers:
+    - url: https://api.supermemory.ai
+      description: Production Server
+  request:
+    security:
+      - title: bearerAuth
+        parameters:
+          query: {}
+          header:
+            Authorization:
+              type: http
+              scheme: bearer
+          cookie: {}
+    parameters:
+      path: {}
+      query: {}
+      header: {}
+      cookie: {}
+    body:
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              containerTags:
+                allOf:
+                  - type: array
+                    items:
+                      type: string
+                    description: >-
+                      Optional comma-separated list of container tags to filter
+                      documents by
+                    example:
+                      - user_123
+                      - project_123
+        examples:
+          example:
+            value:
+              containerTags:
+                - user_123
+                - project_123
+    codeSamples:
+      - lang: JavaScript
+        source: |-
+          import Supermemory from 'supermemory';
+
+          const client = new Supermemory({
+            apiKey: 'My API Key',
+          });
+
+          const connections = await client.connections.list();
+
+          console.log(connections);
+      - lang: Python
+        source: |-
+          from supermemory import Supermemory
+
+          client = Supermemory(
+              api_key="My API Key",
+          )
+          connections = client.connections.list()
+          print(connections)
+  response:
+    '200':
+      application/json:
+        schemaArray:
+          - type: array
+            items:
+              allOf:
+                - type: object
+                  properties:
+                    createdAt:
+                      type: string
+                      format: date-time
+                    documentLimit:
+                      type: number
+                    email:
+                      type: string
+                    expiresAt:
+                      type: string
+                      format: date-time
+                    id:
+                      type: string
+                    metadata:
+                      type: object
+                      additionalProperties: {}
+                    provider:
+                      type: string
+                  required:
+                    - createdAt
+                    - id
+                    - provider
+        examples:
+          example:
+            value:
+              - createdAt: '2023-11-07T05:31:56Z'
+                documentLimit: 123
+                email: <string>
+                expiresAt: '2023-11-07T05:31:56Z'
+                id: <string>
+                metadata: {}
+                provider: <string>
+        description: Connections
+    '401':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              details:
+                allOf:
+                  - type: string
+                    description: Additional error details
+                    example: Query must be at least 1 character long
+              error:
+                allOf:
+                  - type: string
+                    description: Error message
+                    example: Invalid request parameters
+            requiredProperties:
+              - error
+        examples:
+          example:
+            value:
+              details: Query must be at least 1 character long
+              error: Invalid request parameters
+        description: Unauthorized
+    '500':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              details:
+                allOf:
+                  - type: string
+                    description: Additional error details
+                    example: Query must be at least 1 character long
+              error:
+                allOf:
+                  - type: string
+                    description: Error message
+                    example: Invalid request parameters
+            requiredProperties:
+              - error
+        examples:
+          example:
+            value:
+              details: Query must be at least 1 character long
+              error: Invalid request parameters
+        description: Internal server error
+  deprecated: false
+  type: path
+components:
+  schemas: {}
+
+````
