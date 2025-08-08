@@ -62,10 +62,10 @@ class GoogleAdsService {
     }
 
     try {
-      console.log('Getting access token with client ID:', this.clientId);
-      console.log('Client ID length:', this.clientId.length);
-      console.log('Client secret length:', this.clientSecret.length);
-      console.log('Refresh token length:', this.refreshToken.length);
+      console.log('Attempting OAuth token refresh...');
+      console.log('Client ID configured:', !!this.clientId);
+      console.log('Client Secret configured:', !!this.clientSecret);
+      console.log('Refresh Token configured:', !!this.refreshToken);
       
       const response = await axios.post('https://oauth2.googleapis.com/token', {
         client_id: this.clientId,
@@ -73,11 +73,15 @@ class GoogleAdsService {
         refresh_token: this.refreshToken,
         grant_type: 'refresh_token',
       });
-      console.log('Access token obtained successfully');
+      console.log('✅ Access token obtained successfully');
       return response.data.access_token;
     } catch (error: any) {
-      console.error('Failed to get access token:', error.response?.data || error.message);
-      console.error('Request was made with client_id:', this.clientId);
+      console.error('❌ OAuth token refresh failed:', error.response?.data || error.message);
+      if (error.response?.data?.error === 'invalid_client') {
+        console.error('💡 Suggestion: Verify OAuth Client ID/Secret in Google Cloud Console');
+      } else if (error.response?.data?.error === 'invalid_grant') {
+        console.error('💡 Suggestion: Refresh token may be expired - regenerate using OAuth Playground');
+      }
       throw new Error(`Failed to get access token from Google OAuth: ${error.response?.data?.error_description || error.message}`);
     }
   }
