@@ -38,9 +38,8 @@ class GoogleAdsService {
   private isMockMode: boolean;
 
   constructor() {
-    // Fix client ID format - remove the duplicate prefix
-    const rawClientId = process.env.GOOGLE_ADS_CLIENT_ID || '';
-    this.clientId = rawClientId.replace('GOOGLE_ADS_CLIENT_ID=', '');
+    // Use client ID directly from environment
+    this.clientId = process.env.GOOGLE_ADS_CLIENT_ID || '';
     this.clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET || '';
     this.developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '';
     this.refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN || '';
@@ -63,7 +62,11 @@ class GoogleAdsService {
     }
 
     try {
-      console.log('Getting access token with client ID:', this.clientId.substring(0, 20) + '...');
+      console.log('Getting access token with client ID:', this.clientId);
+      console.log('Client ID length:', this.clientId.length);
+      console.log('Client secret length:', this.clientSecret.length);
+      console.log('Refresh token length:', this.refreshToken.length);
+      
       const response = await axios.post('https://oauth2.googleapis.com/token', {
         client_id: this.clientId,
         client_secret: this.clientSecret,
@@ -74,6 +77,7 @@ class GoogleAdsService {
       return response.data.access_token;
     } catch (error: any) {
       console.error('Failed to get access token:', error.response?.data || error.message);
+      console.error('Request was made with client_id:', this.clientId);
       throw new Error(`Failed to get access token from Google OAuth: ${error.response?.data?.error_description || error.message}`);
     }
   }
