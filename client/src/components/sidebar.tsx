@@ -84,6 +84,17 @@ export default function Sidebar({ selectedClient, onClientChange, activeView = '
         </ul>
       </nav>
 
+      {/* Account Settings Link */}
+      <div className="p-4 border-t border-slate-300">
+        <button
+          onClick={() => window.location.href = '/account-settings'}
+          className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-slate-700 hover:bg-slate-200"
+        >
+          <Settings className="w-5 h-5 mr-3" />
+          Account Settings
+        </button>
+      </div>
+
       {/* User Profile */}
       <div className="p-4 border-t border-slate-300">
         <div className="flex items-center justify-between">

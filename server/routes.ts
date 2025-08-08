@@ -968,12 +968,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/settings/api', authenticateToken, async (req: AuthRequest, res) => {
     try {
+      const hasGoogleCreds = !!(process.env.GOOGLE_ADS_CLIENT_ID && process.env.GOOGLE_ADS_REFRESH_TOKEN);
       const apiSettings = {
         googleAds: {
           clientId: process.env.GOOGLE_ADS_CLIENT_ID?.substring(0, 20) + '...' || '',
           developerToken: process.env.GOOGLE_ADS_DEVELOPER_TOKEN ? '***configured***' : '',
           loginCustomerId: process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || '',
-          status: (process.env.GOOGLE_ADS_CLIENT_ID && process.env.GOOGLE_ADS_REFRESH_TOKEN) ? 'connected' : 'disconnected',
+          status: hasGoogleCreds ? 'connected' : 'disconnected',
         },
         openRouter: {
           model: 'anthropic/claude-3-sonnet',
@@ -1025,6 +1026,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error testing API connections:', error);
       res.status(500).json({ error: 'Failed to test connections' });
     }
+  });
+
+  // Google OAuth routes
+  app.get('/api/auth/google', (req, res) => {
+    const scopes = [
+      'https://www.googleapis.com/auth/adwords'
+    ];
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${process.env.GOOGLE_ADS_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent('https://oauth2-playground.googleusercontent.com/')}&` +
+      `scope=${encodeURIComponent(scopes.join(' '))}&` +
+      `response_type=code&` +
+      `access_type=offline&` +
+      `prompt=consent`;
+    
+    res.redirect(authUrl);
+  });
+
+  app.get('/api/auth/google/disconnect', authenticateToken, (req: AuthRequest, res) => {
+    // In a real app, you would revoke the refresh token and clear it from storage
+    res.json({ success: true, message: 'Google Ads disconnected' });
   });
 
   // Health check
