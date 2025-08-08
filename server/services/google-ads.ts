@@ -112,7 +112,7 @@ class GoogleAdsService {
       console.log(`Making Google Ads API request to: ${endpoint}`);
       const response = await axios({
         method: data ? 'POST' : 'GET',
-        url: `${this.baseUrl}/${this.apiVersion}/${endpoint}`,
+        url: `https://googleads.googleapis.com/${this.apiVersion}/${endpoint}`,
         headers,
         data,
       });
@@ -195,8 +195,34 @@ class GoogleAdsService {
   }
 
   async getAccessibleCustomers(): Promise<string[]> {
-    const response = await this.makeRequest('customers:listAccessibleCustomers');
-    return response.resourceNames || [];
+    if (this.isMockMode) {
+      return ['1234567890', '9876543210'];
+    }
+
+    try {
+      // Use the correct Google Ads API URL format for listing accessible customers
+      const accessToken = await this.getAccessToken();
+      const response = await axios.get(`https://googleads.googleapis.com/v15/customers:listAccessibleCustomers`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'developer-token': this.developerToken,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('✅ Accessible customers response:', response.data);
+      
+      // Extract customer IDs from resource names
+      const customerIds = (response.data.resourceNames || []).map((resourceName: string) => {
+        return resourceName.replace('customers/', '');
+      });
+      
+      console.log('Extracted customer IDs:', customerIds);
+      return customerIds;
+    } catch (error: any) {
+      console.error('Failed to get accessible customers:', error.response?.data || error.message);
+      return [];
+    }
   }
 
   async getCustomerInfo(customerId: string): Promise<GoogleAdsClient> {
