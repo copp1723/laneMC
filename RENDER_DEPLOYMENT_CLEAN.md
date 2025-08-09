@@ -44,6 +44,7 @@ GOOGLE_ADS_CLIENT_SECRET=your-client-secret
 GOOGLE_ADS_DEVELOPER_TOKEN=your-developer-token
 GOOGLE_ADS_REFRESH_TOKEN=your-refresh-token
 GOOGLE_ADS_LOGIN_CUSTOMER_ID=your-customer-id
+GOOGLE_ADS_READ_ONLY=true
 OPENROUTER_API_KEY=your-openrouter-key
 ```
 

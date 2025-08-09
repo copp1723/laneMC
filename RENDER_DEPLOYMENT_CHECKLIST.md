@@ -25,13 +25,14 @@ ENVIRONMENT=production
 JWT_SECRET_KEY=your-super-secure-random-string-here
 ```
 
-**Google Ads API (Required for campaign management):**
+**Google Ads API (Reporting-only by default):**
 ```bash
 GOOGLE_ADS_CLIENT_ID=your-google-client-id
 GOOGLE_ADS_CLIENT_SECRET=your-google-client-secret
 GOOGLE_ADS_DEVELOPER_TOKEN=your-developer-token
 GOOGLE_ADS_REFRESH_TOKEN=your-refresh-token
 GOOGLE_ADS_LOGIN_CUSTOMER_ID=your-login-customer-id
+GOOGLE_ADS_READ_ONLY=true
 ```
 
 **AI Integration (Required for chat):**
