@@ -59,6 +59,7 @@ export async function initializeDatabase() {
         target_locations JSONB,
         keywords JSONB,
         ad_groups JSONB,
+  generation_artifact JSONB,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );

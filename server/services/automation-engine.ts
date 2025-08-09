@@ -137,17 +137,21 @@ export class AutomationEngine {
         
         const pacingResult = await budgetPacingService.checkCampaignBudget(account, campaign.id, campaign);
         
-        // Auto-adjust budget if significantly off-pace 
+        // Auto-adjust budget if significantly off-pace
         const delta = Math.abs(pacingResult.adjustmentFactor - 1);
         if (delta >= 0.2) {
           // Apply budget bounds if available
           const bounds = { min: 5, max: 5000 }; // Default bounds
           const newBudget = Math.max(bounds.min, Math.min(bounds.max, pacingResult.recommendedBudget));
-          
+
           console.log(`🔧 Auto-adjusting budget for campaign ${campaign.id}: $${campaign.budget} → $${newBudget}`);
-          
-          await googleAdsService.updateCampaignBudget(customerId, campaign.id, newBudget);
-          
+
+          if (!googleAdsService.isReadOnly()) {
+            await googleAdsService.updateCampaignBudget(customerId, campaign.id, newBudget);
+          } else {
+            console.log('Read-only mode: Skipping Google Ads budget update');
+          }
+
           // Update database
           const dbCampaign = await storage.getCampaigns(accountId);
           const matchingCampaign = dbCampaign.find(c => c.googleCampaignId === campaign.id);

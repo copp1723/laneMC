@@ -36,6 +36,7 @@ class GoogleAdsService {
   private apiVersion: string = 'v15';
   private baseUrl: string = 'https://googleads.googleapis.com';
   private isMockMode: boolean;
+  private readOnly: boolean;
 
   constructor() {
     // Use client ID directly from environment
@@ -45,9 +46,11 @@ class GoogleAdsService {
     this.refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN || '';
     this.loginCustomerId = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || '';
     this.isMockMode = false; // Always use real Google Ads API
-    
+    this.readOnly = (process.env.GOOGLE_ADS_READ_ONLY || 'true').toLowerCase() === 'true';
+
     console.log('Google Ads Service initialized:', {
       isMockMode: this.isMockMode,
+      readOnly: this.readOnly,
       hasClientId: !!this.clientId,
       hasClientSecret: !!this.clientSecret,
       hasDeveloperToken: !!this.developerToken,
@@ -56,13 +59,18 @@ class GoogleAdsService {
     });
   }
 
+  public isReadOnly(): boolean {
+    return this.readOnly;
+  }
+
+
   private async getAccessToken(): Promise<string> {
     try {
       console.log('Attempting OAuth token refresh...');
       console.log('Client ID configured:', !!this.clientId);
       console.log('Client Secret configured:', !!this.clientSecret);
       console.log('Refresh Token configured:', !!this.refreshToken);
-      
+
       const response = await axios.post('https://oauth2.googleapis.com/token', {
         client_id: this.clientId,
         client_secret: this.clientSecret,
@@ -83,6 +91,14 @@ class GoogleAdsService {
   }
 
   private async makeRequest(endpoint: string, data?: any): Promise<any> {
+    // Enforce read-only permissible use: disallow mutate endpoints when enabled
+    if (this.readOnly) {
+      const isMutate = /:mutate($|\?|#)/.test(endpoint) || endpoint.includes(':mutate');
+      if (isMutate) {
+        throw new Error('Google Ads API is in read-only mode. Mutation requests are disabled.');
+      }
+    }
+
     const accessToken = await this.getAccessToken();
     const headers: Record<string,string> = {
       Authorization: `Bearer ${accessToken}`,
@@ -129,14 +145,14 @@ class GoogleAdsService {
           'Content-Type': 'application/json',
         },
       });
-      
+
       console.log('✅ Accessible customers response:', response.data);
-      
+
       // Extract customer IDs from resource names
       const customerIds = (response.data.resourceNames || []).map((resourceName: string) => {
         return resourceName.replace('customers/', '');
       });
-      
+
       console.log('Extracted customer IDs:', customerIds);
       return customerIds;
     } catch (error: any) {
@@ -147,12 +163,12 @@ class GoogleAdsService {
 
   async getCustomerInfo(customerId: string): Promise<GoogleAdsClient> {
     const query = `
-      SELECT 
+      SELECT
         customer.id,
         customer.descriptive_name,
         customer.currency_code,
         customer.time_zone
-      FROM customer 
+      FROM customer
       WHERE customer.id = ${customerId}
     `;
 
@@ -175,7 +191,7 @@ class GoogleAdsService {
 
   async getCampaigns(customerId: string): Promise<GoogleAdsCampaign[]> {
     const query = `
-      SELECT 
+      SELECT
         campaign.id,
         campaign.name,
         campaign.status,
@@ -201,7 +217,7 @@ class GoogleAdsService {
     if (campaignId) filters.unshift(`campaign.id = ${campaignId}`);
     const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
     const query = `
-      SELECT 
+      SELECT
         metrics.impressions,
         metrics.clicks,
         metrics.conversions,
@@ -251,7 +267,7 @@ class GoogleAdsService {
 
     // Create campaign budget first
     const budgetId = await this.createCampaignBudget(customerId, campaignData.budget);
-    
+
     // Create the campaign
     const campaign = {
       operations: [
@@ -279,12 +295,12 @@ class GoogleAdsService {
     if (response.results && response.results.length > 0) {
       const campaignResourceName = response.results[0].resourceName;
       const campaignId = campaignResourceName.split('/').pop();
-      
+
       // Add location targeting if specified
       if (campaignData.targetLocations && campaignData.targetLocations.length > 0) {
         await this.addLocationTargeting(customerId, campaignId, campaignData.targetLocations);
       }
-      
+
       return campaignId;
     }
 
@@ -352,7 +368,7 @@ class GoogleAdsService {
     // Get campaign budget resource name first
     const campaignQuery = `
       SELECT campaign.campaign_budget
-      FROM campaign 
+      FROM campaign
       WHERE campaign.id = ${campaignId}
     `;
 
@@ -360,7 +376,7 @@ class GoogleAdsService {
 
     if (campaignResponse.results && campaignResponse.results.length > 0) {
       const budgetResourceName = campaignResponse.results[0].campaign.campaignBudget;
-      
+
       const budgetUpdate = {
         operations: [
           {
@@ -381,14 +397,14 @@ class GoogleAdsService {
   async getQualityScoreMetrics(customerId: string, campaignId: string): Promise<any[]> {
     try {
       const query = `
-        SELECT 
+        SELECT
           ad_group.id,
           ad_group_criterion.keyword.text,
           ad_group_criterion.quality_info.quality_score,
           ad_group_criterion.quality_info.creative_quality_score,
           ad_group_criterion.quality_info.landing_page_quality_score,
           ad_group_criterion.quality_info.search_predicted_ctr
-        FROM ad_group_criterion 
+        FROM ad_group_criterion
         WHERE campaign.id = ${campaignId}
           AND ad_group_criterion.type = KEYWORD
           AND ad_group_criterion.quality_info.quality_score IS NOT NULL

@@ -173,7 +173,12 @@ class CampaignGenerator {
       const reviewResult = await this.reviewCampaign(campaignData);
 
       // Save campaign to database
-      const campaign = await this.saveCampaign(campaignData, conversationId, (brief as any).googleAdsAccountId || "");
+        const campaign = await this.saveCampaign(
+          campaignData,
+          conversationId,
+          '',
+          { brief, strategy, review: reviewResult, workflowId }
+        );
 
       return {
         success: true,
@@ -603,17 +608,32 @@ Return review as JSON.`;
     }
   }
 
-  private async saveCampaign(campaignData: any, conversationId: string, googleAdsAccountId: string): Promise<{ id: string }> {
-    const campaign: InsertCampaign = {
-      name: campaignData.campaign?.name || 'AI Generated Campaign',
-      status: 'draft',
-      googleAdsAccountId,
-      type: 'SEARCH',
-      budget: campaignData.budget?.amount || 1000,
-      targetLocations: campaignData.targeting || {},
-      adGroups: campaignData.adGroups || {},
-      keywords: campaignData.keywords || {}
+  private async saveCampaign(
+    campaignData: any,
+    conversationId: string,
+    googleAdsAccountId: string,
+    extras?: { brief?: CampaignBrief; strategy?: CampaignStrategy; review?: any; workflowId?: string }
+  ): Promise<{ id: string }> {
+    const artifact = {
+      workflowId: extras?.workflowId,
+      brief: extras?.brief,
+      strategy: extras?.strategy,
+      review: extras?.review,
+      raw: campaignData,
+      conversationId
     };
+
+    const campaign: InsertCampaign = {
+      name: campaignData.campaign?.name || campaignData.name || 'AI Generated Campaign',
+      status: 'draft',
+      googleAdsAccountId: googleAdsAccountId || undefined,
+      type: (campaignData.campaign?.type || campaignData.type || 'SEARCH').toString().toUpperCase(),
+      budget: (campaignData.budget?.amount || campaignData.budget || 1000) as any,
+      targetLocations: campaignData.targeting || campaignData.targetLocations || {},
+      adGroups: campaignData.adGroups || {},
+      keywords: campaignData.keywords || {},
+      generationArtifact: artifact as any
+    } as any;
 
     return await storage.createCampaign(campaign);
   }

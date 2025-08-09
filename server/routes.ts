@@ -201,8 +201,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Campaign management routes
   app.post("/api/google-ads/campaigns", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      if (googleAdsService.isReadOnly()) {
+        return res.status(403).json({ message: "Read-only mode enabled: Campaign creation is disabled." });
+      }
+
       const { accountId, campaignData } = req.body;
-      
+
       const account = await storage.getGoogleAdsAccount(accountId);
       if (!account) {
         return res.status(404).json({ message: "Google Ads account not found" });
@@ -226,7 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         keywords: campaignData.keywords,
       });
 
-      res.json({ 
+      res.json({
         message: "Campaign created successfully",
         campaign: {
           id: campaign.id,
@@ -243,6 +247,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/google-ads/campaigns/:campaignId/budget", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      if (googleAdsService.isReadOnly()) {
+        return res.status(403).json({ message: "Read-only mode enabled: Budget updates are disabled." });
+      }
       const { campaignId } = req.params;
       const { budget } = req.body;
       
@@ -898,22 +905,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Apply budget recommendation
   app.post('/api/budget-pacing/:accountId/:campaignId/apply', authenticateToken, async (req: AuthRequest, res) => {
     try {
+      if (googleAdsService.isReadOnly()) {
+        return res.status(403).json({ error: 'Read-only mode enabled: Applying budget changes is disabled.' });
+      }
+
       const { accountId, campaignId } = req.params;
       const { recommendedBudget } = req.body;
-      
+
       // Get the account
       const account = await storage.getGoogleAdsAccount(accountId);
       if (!account) {
         return res.status(404).json({ error: 'Account not found' });
       }
-      
+
       // Apply the budget change via Google Ads API
       await googleAdsService.updateCampaignBudget(
         account.customerId,
         campaignId,
         recommendedBudget
       );
-      
+
       res.json({ success: true, appliedBudget: recommendedBudget });
     } catch (error) {
       console.error('Error applying budget recommendation:', error);
