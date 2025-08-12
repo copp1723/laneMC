@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 // Initialize database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 const db = drizzle(pool);
@@ -12,6 +13,7 @@ const db = drizzle(pool);
 export async function initializeDatabase() {
   const tempPool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   });
   const tempDb = drizzle(tempPool);
 
