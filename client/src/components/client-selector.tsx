@@ -25,22 +25,24 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
   const queryClient = useQueryClient();
 
   const { 
-    data: accounts = [], 
+    data: accountsResponse, 
     isLoading, 
     error 
-  } = useQuery<GoogleAdsAccount[]>({
+  } = useQuery({
     queryKey: ['/api/google-ads/accounts'],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+  
+  const accounts = accountsResponse?.data || [];
 
   const syncMutation = useMutation({
     mutationFn: () => apiRequest('POST', '/api/google-ads/accounts/sync'),
     onSuccess: async (response) => {
-      const updatedAccounts = await response.json();
-      queryClient.setQueryData(['/api/google-ads/accounts'], updatedAccounts);
+      const result = await response.json();
+      queryClient.setQueryData(['/api/google-ads/accounts'], result);
       toast({
         title: 'Accounts synchronized',
-        description: `Found ${updatedAccounts.length} Google Ads accounts`,
+        description: `Found ${result.data?.length || 0} Google Ads accounts`,
       });
     },
     onError: (error: Error) => {
