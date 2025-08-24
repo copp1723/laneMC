@@ -6,7 +6,7 @@ config();
 import { EnvironmentValidator } from './services/env-validation';
 EnvironmentValidator.validateEnvironment();
 
-import express, { type Request, Response, NextFunction } from "express";
+import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
@@ -29,7 +29,7 @@ app.set('trust proxy', 1);
 // 1. Health endpoints (BEFORE rate limiting)
 
 // Simple health check for load balancers
-app.get("/api/health", async (req, res) => {
+app.get("/api/health", async (_req, res) => {
   try {
     const health = await HealthService.getSimpleHealth();
     res.status(health.status === 'healthy' ? 200 : 503).json(health);
@@ -40,7 +40,7 @@ app.get("/api/health", async (req, res) => {
 });
 
 // Comprehensive health check for monitoring systems
-app.get("/api/health/detailed", async (req, res) => {
+app.get("/api/health/detailed", async (_req, res) => {
   try {
     const health = await HealthService.getHealthStatus();
     const statusCode = health.status === 'healthy' ? 200 : health.status === 'degraded' ? 200 : 503;
@@ -56,7 +56,7 @@ app.get("/api/health/detailed", async (req, res) => {
 });
 
 // Database-specific health check
-app.get("/api/health/db", async (req, res) => {
+app.get("/api/health/db", async (_req, res) => {
   try {
     const dbHealth = await checkDatabaseHealth();
     const statusCode = dbHealth.status === 'healthy' ? 200 : 503;
@@ -78,7 +78,7 @@ app.get("/api/health/db", async (req, res) => {
 });
 
 // Circuit breaker status endpoint
-app.get("/api/monitoring/circuit-breakers", (req, res) => {
+app.get("/api/monitoring/circuit-breakers", (_req, res) => {
   try {
     const stats = CircuitBreakerManager.getAllStats();
     const health = CircuitBreakerManager.getHealthStatus();
@@ -230,27 +230,22 @@ app.use(sanitizeInput);
 app.use((req: any, res, next) => {
   const startTime = PerformanceMonitor.startTimer();
   const requestId = generateRequestId();
-  const startMemory = process.memoryUsage();
   
   // Add request ID to request object for correlation
   req.requestId = requestId;
   req.startTime = Date.now();
   
   // Capture response data
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
   let responseSize = 0;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
     responseSize = JSON.stringify(bodyJson).length;
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
   res.on("finish", () => {
     const duration = PerformanceMonitor.endTimer(startTime);
-    const endMemory = process.memoryUsage();
-    const memoryDelta = endMemory.heapUsed - startMemory.heapUsed;
 
     if (req.path.startsWith("/api") && !req.path.startsWith("/api/health")) {
       // Structured HTTP logging

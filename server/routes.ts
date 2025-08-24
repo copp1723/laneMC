@@ -1,14 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { z } from "zod";
 import { authenticateToken, hashPassword, comparePassword, generateToken, invalidateToken, AuthRequest } from "./services/auth";
 import { storage } from "./storage";
 import { googleAdsService } from "./services/google-ads";
 import { openRouterService } from "./services/openrouter";
-import { insertUserSchema, insertChatSessionSchema, insertChatMessageSchema, insertCampaignBriefSchema } from "@shared/schema";
-import { validate, authSchemas, commonSchemas, chatSchemas, campaignBriefSchemas } from "./middleware/validation";
-import { ErrorHandler, NotFoundError, UnauthorizedError, ConflictError } from "./services/error-handler";
-import { CircuitBreakerManager } from "./services/circuit-breaker";
+import { insertChatSessionSchema, insertCampaignBriefSchema } from "@shared/schema";
+import { validate, authSchemas } from "./middleware/validation";
+import { ErrorHandler, UnauthorizedError, ConflictError } from "./services/error-handler";
 import { GracefulDegradationService } from "./services/graceful-degradation";
 
 // Import new route modules
@@ -31,7 +29,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerCampaignGeneratorRoutes(app);
 
   // Test endpoint (no auth required)
-  app.get("/api/test", (req, res) => {
+  app.get("/api/test", (_req, res) => {
     res.json({
       success: true,
       message: "API is working!",
@@ -41,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create admin user endpoint (no auth required for setup)
-  app.post("/api/setup/admin", async (req, res) => {
+  app.post("/api/setup/admin", async (_req, res) => {
     try {
       const adminEmail = 'admin@lanemc.com';
       const adminPassword = 'admin123';
@@ -162,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Google Ads Account routes
   app.get("/api/google-ads/accounts", authenticateToken,
-    ErrorHandler.asyncHandler(async (req: Request, res: Response) => {
+    ErrorHandler.asyncHandler(async (_req: Request, res: Response) => {
       // Use graceful degradation for Google Ads accounts
       const accounts = await GracefulDegradationService.getGoogleAdsAccountsWithFallback();
 
@@ -174,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })
   );
 
-  app.post("/api/google-ads/accounts/sync", authenticateToken, async (req, res) => {
+  app.post("/api/google-ads/accounts/sync", authenticateToken, async (_req, res) => {
     try {
       // Get accessible customers from Google Ads API
       const customerIds = await googleAdsService.getAccessibleCustomers();
@@ -361,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.write(chunk);
           fullResponse += chunk;
         },
-        async (complete) => {
+        async (_complete) => {
           // Save assistant message
           await storage.createChatMessage({
             sessionId,

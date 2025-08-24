@@ -6,7 +6,6 @@
 import { storage } from '../storage';
 import { googleAdsService } from './google-ads';
 import { surgicalBudgetAnalysis } from './surgical-budget-analysis';
-import type { GoogleAdsAccount } from '@shared/schema';
 
 export interface DetectedIssue {
   id: string;

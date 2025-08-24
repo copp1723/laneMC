@@ -6,7 +6,7 @@
 
 import { storage } from '../storage';
 import { googleAdsService } from './google-ads';
-import type { GoogleAdsAccount, Campaign } from '@shared/schema';
+import type { GoogleAdsAccount } from '@shared/schema';
 import { CacheService } from './cache';
 import Logger, { PerformanceMonitor } from './logger';
 import { DatabaseMonitor } from './database-monitor';
@@ -347,7 +347,6 @@ class SurgicalBudgetAnalysisService {
       spendVariancePercentage,
       dailyBudget,
       recommendedDailyBudget,
-      monthlyBudget,
       projectedMonthEndSpend
     } = params;
 
@@ -463,7 +462,6 @@ class SurgicalBudgetAnalysisService {
     const year = now.getFullYear();
     const month = now.getMonth();
 
-    const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
     const totalDaysInMonth = lastDayOfMonth.getDate();
 

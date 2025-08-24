@@ -115,24 +115,36 @@ export class GracefulDegradationService {
           fallback: {
             source: 'cache' as const,
             timestamp: new Date().toISOString()
-          }
+          } as FallbackData
         }));
       },
       async () => {
-        // Fallback: Return mock data or empty array
+        // Fallback: Return comprehensive mock data for testing
         Logger.warn('Using mock Google Ads accounts data');
         return [{
           id: 'mock-account-1',
           customerId: '1234567890',
-          name: 'Demo Account (Service Unavailable)',
+          name: 'Demo eCommerce Store',
           currency: 'USD',
           timezone: 'America/New_York',
           isActive: true,
           fallback: {
-            source: 'cache' as const,
+            source: 'mock' as const,
             timestamp: new Date().toISOString(),
             warning: 'Google Ads service is temporarily unavailable. Showing demo data.'
-          }
+          } as FallbackData
+        }, {
+          id: 'mock-account-2',
+          customerId: '0987654321',
+          name: 'Demo SaaS Company',
+          currency: 'USD',
+          timezone: 'America/Los_Angeles',
+          isActive: true,
+          fallback: {
+            source: 'mock' as const,
+            timestamp: new Date().toISOString(),
+            warning: 'Google Ads service is temporarily unavailable. Showing demo data.'
+          } as FallbackData
         }];
       },
       cacheKey
@@ -241,6 +253,19 @@ export class GracefulDegradationService {
    * Check if Google Ads service is available
    */
   static isGoogleAdsServiceAvailable(): boolean {
+    // Check if we have the required environment variables for Google Ads API
+    const hasCredentials = !!(
+      process.env.GOOGLE_ADS_CLIENT_ID &&
+      process.env.GOOGLE_ADS_CLIENT_SECRET &&
+      process.env.GOOGLE_ADS_DEVELOPER_TOKEN &&
+      process.env.GOOGLE_ADS_REFRESH_TOKEN
+    );
+    
+    if (!hasCredentials) {
+      return false;
+    }
+    
+    // Check circuit breaker status
     const breaker = CircuitBreakerManager.getBreaker('google-ads-api');
     return breaker.isHealthy();
   }

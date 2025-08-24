@@ -27,7 +27,6 @@ export default function ChatInterface({ selectedClient }: ChatInterfaceProps) {
     isStreaming,
     streamingMessage,
     sendMessage,
-    currentSessionId,
   } = useChat({ selectedClient });
 
   const scrollToBottom = () => {

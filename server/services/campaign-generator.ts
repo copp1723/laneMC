@@ -1,5 +1,4 @@
 import { openRouterService } from './openrouter';
-import { googleAdsService } from './google-ads';
 import { storage } from '../storage';
 import type { CampaignBrief } from '@shared/schema';
 
@@ -64,7 +63,7 @@ Format the response as a structured JSON object that can be used to create the a
         (chunk) => {
           fullResponse += chunk;
         },
-        (complete) => {
+        (_complete) => {
           try {
             // Try to extract JSON from the response
             const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);

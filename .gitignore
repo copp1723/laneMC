@@ -10,3 +10,9 @@ vite.config.ts.*
 .env.local
 .env.production
 .env.staging
+
+# Backup files
+*\ 2.*
+*\ 3.*
+*.backup
+*.bak

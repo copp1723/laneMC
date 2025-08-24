@@ -12,13 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, AlertCircle, X } from 'lucide-react';
 
-interface CampaignStructure {
-  name: string;
-  type: string;
-  budget: number;
-  details: string;
-  status: 'recommended' | 'optional';
-}
 
 interface CampaignApprovalModalProps {
   isOpen?: boolean;

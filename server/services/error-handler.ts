@@ -83,7 +83,7 @@ export class ErrorHandler {
   /**
    * Global error handling middleware
    */
-  static handle(err: Error, req: Request, res: Response, next: NextFunction): void {
+  static handle(err: Error, req: Request, res: Response, _next: NextFunction): void {
     const requestId = (req as any).requestId;
     
     // Log the error
@@ -115,7 +115,7 @@ export class ErrorHandler {
   /**
    * Handle custom application errors
    */
-  private static handleAppError(err: AppError, req: Request, res: Response, requestId?: string): void {
+  private static handleAppError(err: AppError, _req: Request, res: Response, requestId?: string): void {
     const response: ErrorResponse = {
       success: false,
       error: {
@@ -136,7 +136,7 @@ export class ErrorHandler {
   /**
    * Handle validation errors (Zod, etc.)
    */
-  private static handleValidationError(err: any, req: Request, res: Response, requestId?: string): void {
+  private static handleValidationError(err: any, _req: Request, res: Response, requestId?: string): void {
     let message = 'Validation failed';
     let field: string | undefined;
 
@@ -169,7 +169,7 @@ export class ErrorHandler {
   /**
    * Handle JWT errors
    */
-  private static handleJWTError(err: Error, req: Request, res: Response, requestId?: string): void {
+  private static handleJWTError(_err: Error, _req: Request, res: Response, requestId?: string): void {
     const response: ErrorResponse = {
       success: false,
       error: {
@@ -186,7 +186,7 @@ export class ErrorHandler {
   /**
    * Handle expired token errors
    */
-  private static handleTokenExpiredError(err: Error, req: Request, res: Response, requestId?: string): void {
+  private static handleTokenExpiredError(_err: Error, _req: Request, res: Response, requestId?: string): void {
     const response: ErrorResponse = {
       success: false,
       error: {
@@ -203,7 +203,7 @@ export class ErrorHandler {
   /**
    * Handle JSON parse errors
    */
-  private static handleJSONParseError(err: Error, req: Request, res: Response, requestId?: string): void {
+  private static handleJSONParseError(_err: Error, _req: Request, res: Response, requestId?: string): void {
     const response: ErrorResponse = {
       success: false,
       error: {
@@ -220,7 +220,7 @@ export class ErrorHandler {
   /**
    * Handle generic/unknown errors
    */
-  private static handleGenericError(err: Error, req: Request, res: Response, requestId?: string): void {
+  private static handleGenericError(err: Error, _req: Request, res: Response, requestId?: string): void {
     const isDevelopment = process.env.NODE_ENV === 'development';
     
     const response: ErrorResponse = {

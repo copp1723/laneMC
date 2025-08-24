@@ -1,5 +1,4 @@
-import { GoogleAuth } from 'google-auth-library';
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
 import { CacheService } from './cache';
 
 export interface GoogleAdsClient {
@@ -98,8 +97,19 @@ class GoogleAdsService {
       'google_ads',
       'accessible_customers',
       async () => {
-        const response = await this.makeRequest('customers:listAccessibleCustomers');
-        return response.resourceNames || [];
+        // Use the specific Google Ads API endpoint for listing accessible customers
+        const accessToken = await this.getAccessToken();
+        const response = await axios.get(
+          `${this.baseUrl}/${this.apiVersion}/customers:listAccessibleCustomers`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'developer-token': this.developerToken,
+              'Content-Type': 'application/json',
+            }
+          }
+        );
+        return response.data.resourceNames || [];
       },
       300 // Cache for 5 minutes
     );

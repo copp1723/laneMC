@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
 import type { GoogleAdsAccount } from '@shared/schema';
@@ -29,18 +28,7 @@ interface BudgetData {
   status: 'on_track' | 'over_pacing' | 'under_pacing';
 }
 
-interface Issue {
-  id: string;
-  type: 'warning' | 'suggestion' | 'error';
-  title: string;
-  description: string;
-}
 
-interface Activity {
-  id: string;
-  title: string;
-  timestamp: string;
-}
 
 export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
   const { user } = useAuth();

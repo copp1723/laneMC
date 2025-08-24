@@ -1,5 +1,5 @@
 // Simple boot monitor: logs to console & reports errors to server
-function report(path: string, payload: any) {
+function report(_path: string, payload: any) {
   try {
     fetch('/api/monitoring/client-error', {
       method: 'POST',

@@ -175,7 +175,7 @@ function generateSampleLogs(limit: number): LogEntry[] {
  * GET /api/monitoring/health
  * Simple health check endpoint
  */
-router.get('/health', async (req, res) => {
+router.get('/health', async (_req, res) => {
   try {
     const health = await HealthService.getSimpleHealth();
     res.status(health.status === 'healthy' ? 200 : 503).json(health);
@@ -193,7 +193,7 @@ router.get('/health', async (req, res) => {
  * GET /api/monitoring/health/detailed
  * Comprehensive health check with detailed metrics
  */
-router.get('/health/detailed', authenticateToken, requireRole('admin'), async (req, res) => {
+router.get('/health/detailed', authenticateToken, requireRole('admin'), async (_req, res) => {
   try {
     const health = await HealthService.getHealthStatus();
     const statusCode = health.status === 'healthy' ? 200 : health.status === 'degraded' ? 200 : 503;
@@ -769,7 +769,7 @@ function estimateCompressionSize(jsonString: string): number {
   let compressionSavings = 0;
   
   // Calculate compression savings for repetitive patterns
-  Object.entries(patterns).forEach(([key, pattern]) => {
+  Object.entries(patterns).forEach(([_key, pattern]) => {
     const matches = jsonString.match(pattern);
     if (matches) {
       // Estimate compression ratio based on pattern frequency

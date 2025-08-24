@@ -19,7 +19,7 @@ export interface ValidationSchemas {
  * Validation middleware factory
  */
 export function validate(schemas: ValidationSchemas) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     try {
       // Validate request body
       if (schemas.body) {
@@ -216,7 +216,7 @@ export const campaignBriefSchemas = {
 /**
  * Sanitize input middleware
  */
-export function sanitizeInput(req: Request, res: Response, next: NextFunction) {
+export function sanitizeInput(req: Request, _res: Response, next: NextFunction) {
   // Sanitize string inputs to prevent XSS
   const sanitizeObject = (obj: any): any => {
     if (typeof obj === 'string') {

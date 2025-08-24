@@ -47,11 +47,11 @@ export class CacheService {
         });
       });
 
-      cache.on('del', (key, value) => {
+      cache.on('del', (key, _value) => {
         Logger.debug(`Cache DEL: ${name}:${key}`, { cacheInstance: name });
       });
 
-      cache.on('expired', (key, value) => {
+      cache.on('expired', (key, _value) => {
         Logger.debug(`Cache EXPIRED: ${name}:${key}`, { cacheInstance: name });
       });
 
@@ -201,7 +201,7 @@ export class CacheService {
         stats.misses = 0;
       }
     } else {
-      for (const [name, stats] of Array.from(this.stats)) {
+      for (const [_name, stats] of Array.from(this.stats)) {
         stats.hits = 0;
         stats.misses = 0;
       }

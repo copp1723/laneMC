@@ -5,7 +5,6 @@
 
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import { Request, Response } from 'express';
 
 // Log levels: error, warn, info, http, verbose, debug, silly
 const logLevel = process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');

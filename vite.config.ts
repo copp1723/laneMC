@@ -2,9 +2,8 @@ import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
-import { analyzer } from "vite-bundle-analyzer";
 
-export default defineConfig((configEnv) => {
+export default defineConfig((_configEnv) => {
   const plugins: PluginOption[] = [react()];
 
   // Add bundle analysis plugins for production builds

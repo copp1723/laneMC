@@ -2,7 +2,6 @@ import type { Express } from "express";
 import { authenticateToken, AuthRequest } from "../services/auth";
 import { campaignGeneratorService } from "../services/campaign-generator";
 import { storage } from "../storage";
-import { z } from "zod";
 
 export function registerCampaignGeneratorRoutes(app: Express): void {
   

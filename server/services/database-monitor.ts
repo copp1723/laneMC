@@ -3,7 +3,7 @@
  * Tracks query performance, slow queries, and database health
  */
 
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import Logger, { PerformanceMonitor } from './logger';
 import { CacheService } from './cache';
 

@@ -35,11 +35,11 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
-pool.on('connect', (client) => {
+pool.on('connect', (_client) => {
   console.log('Database client connected');
 });
 
-pool.on('remove', (client) => {
+pool.on('remove', (_client) => {
   console.log('Database client removed');
 });
 
@@ -165,7 +165,7 @@ export class DbStorage implements IStorage {
   }
 
   // Google Ads Account methods
-  async getGoogleAdsAccounts(userId?: string): Promise<GoogleAdsAccount[]> {
+  async getGoogleAdsAccounts(_userId?: string): Promise<GoogleAdsAccount[]> {
     // For now, return all active accounts since we don't have user-account relationships in schema
     // In a real implementation, you'd join with a user_accounts table
     const query = db.select().from(googleAdsAccounts).where(eq(googleAdsAccounts.isActive, true));

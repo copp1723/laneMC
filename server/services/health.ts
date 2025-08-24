@@ -3,7 +3,6 @@
  * Monitors system health, database connectivity, and external API status
  */
 
-import { Pool } from 'pg';
 import { storage } from '../storage';
 import { googleAdsService } from './google-ads';
 import Logger from './logger';
@@ -107,7 +106,7 @@ export class HealthService {
     
     try {
       // Test basic database connectivity
-      const testUser = await storage.getUser('health-check-test');
+      await storage.getUser('health-check-test');
       const duration = Date.now() - start;
 
       if (duration > 5000) {
