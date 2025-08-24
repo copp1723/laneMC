@@ -263,12 +263,6 @@ app.use((req: any, res, next) => {
 
   const server = await registerRoutes(app);
 
-  // 404 handler for undefined routes (must be before error handler)
-  app.use('*', ErrorHandler.handle404);
-
-  // Global error handler (must be last)
-  app.use(ErrorHandler.handle);
-
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -277,6 +271,12 @@ app.use((req: any, res, next) => {
   } else {
     serveStatic(app);
   }
+
+  // 404 handler for undefined routes (must be after static serving)
+  app.use('*', ErrorHandler.handle404);
+
+  // Global error handler (must be last)
+  app.use(ErrorHandler.handle);
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 3000 if not specified to match .env
