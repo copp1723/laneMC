@@ -3,7 +3,15 @@ import bcrypt from 'bcryptjs';
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
 
-const JWT_SECRET = process.env.JWT_SECRET_KEY || process.env.SECRET_KEY || 'fallback-secret-key';
+// Validate JWT secret is provided
+if (!process.env.JWT_SECRET_KEY && !process.env.SECRET_KEY) {
+  throw new Error('JWT_SECRET_KEY or SECRET_KEY environment variable is required for authentication');
+}
+
+const JWT_SECRET = (process.env.JWT_SECRET_KEY || process.env.SECRET_KEY) as string;
+
+// Token blacklist for logout functionality (in-memory for MVP)
+const tokenBlacklist = new Set<string>();
 
 export interface AuthRequest extends Request {
   user?: {
@@ -42,6 +50,11 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
     return res.status(401).json({ message: 'Access token required' });
   }
 
+  // Check if token is blacklisted
+  if (tokenBlacklist.has(token)) {
+    return res.status(403).json({ message: 'Token has been invalidated' });
+  }
+
   const payload = verifyToken(token);
   if (!payload) {
     return res.status(403).json({ message: 'Invalid or expired token' });
@@ -78,4 +91,14 @@ export function requireRole(role: string) {
 
     next();
   };
+}
+
+export function invalidateToken(token: string): void {
+  tokenBlacklist.add(token);
+  
+  // Clean up expired tokens periodically (simple cleanup for MVP)
+  if (tokenBlacklist.size > 1000) {
+    // In production, this would be more sophisticated with actual expiry checking
+    tokenBlacklist.clear();
+  }
 }

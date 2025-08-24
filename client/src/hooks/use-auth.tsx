@@ -37,10 +37,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const response = await apiRequest('GET', '/api/auth/me');
-      const data = await response.json();
-      setUser(data.user);
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData.user);
+      } else {
+        // Token is invalid, remove it
+        localStorage.removeItem('auth_token');
+        setUser(null);
+      }
     } catch (error) {
+      console.log('Auth error:', error);
       localStorage.removeItem('auth_token');
+      setUser(null);
     } finally {
       setIsLoading(false);
     }

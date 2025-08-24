@@ -1,24 +1,45 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
-import { authenticateToken, hashPassword, comparePassword, generateToken, AuthRequest } from "./services/auth";
+import { authenticateToken, hashPassword, comparePassword, generateToken, invalidateToken, AuthRequest } from "./services/auth";
 import { storage } from "./storage";
 import { googleAdsService } from "./services/google-ads";
 import { openRouterService } from "./services/openrouter";
 import { insertUserSchema, insertChatSessionSchema, insertChatMessageSchema, insertCampaignBriefSchema } from "@shared/schema";
+import { validate, authSchemas, commonSchemas, chatSchemas, campaignBriefSchemas } from "./middleware/validation";
+import { ErrorHandler, NotFoundError, UnauthorizedError, ConflictError } from "./services/error-handler";
+import { CircuitBreakerManager } from "./services/circuit-breaker";
+import { GracefulDegradationService } from "./services/graceful-degradation";
+
+// Import new route modules
+import budgetPacingRoutes from "./routes/budget-pacing";
+import issuesRoutes from "./routes/issues";
+import insightsRoutes from "./routes/insights";
+import { registerCampaignGeneratorRoutes } from "./routes/campaign-generator";
+import monitoringRoutes from "./routes/monitoring";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // Auth routes
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const { username, email, password } = insertUserSchema.parse(req.body);
-      
+  // Mount new route modules
+  app.use('/api/budget-pacing', budgetPacingRoutes);
+  app.use('/api/issues', issuesRoutes);
+  app.use('/api/insights', insightsRoutes);
+  app.use('/api/monitoring', monitoringRoutes);
+  
+  // Register campaign generator routes
+  registerCampaignGeneratorRoutes(app);
+
+  // Auth routes with validation
+  app.post("/api/auth/register",
+    validate({ body: authSchemas.register }),
+    ErrorHandler.asyncHandler(async (req: Request, res: Response) => {
+      const { username, email, password } = req.body;
+
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
+        throw new ConflictError("An account with this email already exists");
       }
 
       const hashedPassword = await hashPassword(password);
@@ -29,60 +50,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const token = generateToken(user.id);
-      res.json({ 
-        token, 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          email: user.email, 
-          role: user.role 
-        } 
+      res.json({
+        success: true,
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
       });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
+    })
+  );
 
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { email, password } = z.object({
-        email: z.string().email(),
-        password: z.string().min(1),
-      }).parse(req.body);
+  app.post("/api/auth/login",
+    validate({ body: authSchemas.login }),
+    ErrorHandler.asyncHandler(async (req: Request, res: Response) => {
+      const { email, password } = req.body;
 
       const user = await storage.getUserByEmail(email);
       if (!user || !(await comparePassword(password, user.password))) {
-        return res.status(401).json({ message: "Invalid credentials" });
+        throw new UnauthorizedError("Invalid email or password");
       }
 
       const token = generateToken(user.id);
-      res.json({ 
-        token, 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          email: user.email, 
-          role: user.role 
-        } 
+      res.json({
+        success: true,
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
       });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
+    })
+  );
 
   app.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
     res.json({ user: req.user });
   });
 
-  // Google Ads Account routes
-  app.get("/api/google-ads/accounts", authenticateToken, async (req, res) => {
+  app.post("/api/auth/logout", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const accounts = await storage.getGoogleAdsAccounts();
-      res.json(accounts);
+      const authHeader = req.headers.authorization;
+      const token = authHeader && authHeader.split(' ')[1];
+      
+      if (token) {
+        invalidateToken(token);
+      }
+      
+      res.json({ message: "Logged out successfully" });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ message: "Logout error" });
     }
   });
+
+  // Google Ads Account routes
+  app.get("/api/google-ads/accounts", authenticateToken,
+    ErrorHandler.asyncHandler(async (req: Request, res: Response) => {
+      // Use graceful degradation for Google Ads accounts
+      const accounts = await GracefulDegradationService.getGoogleAdsAccountsWithFallback();
+
+      res.json({
+        success: true,
+        data: accounts,
+        serviceStatus: GracefulDegradationService.isGoogleAdsServiceAvailable() ? 'available' : 'degraded'
+      });
+    })
+  );
 
   app.post("/api/google-ads/accounts/sync", authenticateToken, async (req, res) => {
     try {
@@ -338,14 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Health check
-  app.get("/api/health", (req, res) => {
-    res.json({ 
-      status: "healthy", 
-      timestamp: new Date().toISOString(),
-      environment: process.env.ENVIRONMENT || 'development'
-    });
-  });
+  // Health check is now handled in server/index.ts before rate limiting
 
   return httpServer;
 }

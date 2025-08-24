@@ -41,38 +41,29 @@ interface Activity {
 }
 
 export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
-  const [budgetData] = useState<BudgetData>({
-    monthly: 85000,
-    used: 57800,
-    percentUsed: 68,
-    status: 'on_track'
-  });
-
-  const [issues] = useState<Issue[]>([
-    {
-      id: '1',
-      type: 'warning',
-      title: 'Budget pacing warning',
-      description: 'Search campaign spending 15% above target'
-    },
-    {
-      id: '2',
-      type: 'suggestion',
-      title: 'Optimization suggestion',
-      description: '3 keywords recommend bid adjustments'
-    }
-  ]);
-
-  const [activities] = useState<Activity[]>([
-    { id: '1', title: 'Campaign optimization completed', timestamp: '2 hours ago' },
-    { id: '2', title: 'Budget adjustment approved', timestamp: '4 hours ago' },
-    { id: '3', title: 'New keywords added', timestamp: 'Yesterday' }
-  ]);
 
   const { data: metrics, isLoading: metricsLoading } = useQuery<PerformanceMetrics>({
     queryKey: ['/api/google-ads/accounts', selectedClient?.id, 'metrics'],
     enabled: !!selectedClient,
     staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  const { data: budgetData, isLoading: budgetLoading } = useQuery<BudgetData>({
+    queryKey: ['/api/google-ads/accounts', selectedClient?.id, 'pacing'],
+    enabled: !!selectedClient,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const { data: issues = [], isLoading: issuesLoading } = useQuery<Issue[]>({
+    queryKey: ['/api/issue-detection', selectedClient?.id],
+    enabled: !!selectedClient,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  const { data: activities = [], isLoading: activitiesLoading } = useQuery<Activity[]>({
+    queryKey: ['/api/audit-logs', selectedClient?.id],
+    enabled: !!selectedClient,
+    staleTime: 15 * 60 * 1000, // 15 minutes
   });
 
   const formatCurrency = (amount: number) => {
@@ -134,19 +125,17 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : metrics ? (
               <>
                 <Card className="p-3 hover:shadow-sm transition-shadow">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Spend</span>
                     <span className="text-lg font-semibold text-slate-900">
-                      {formatCurrency(metrics?.cost || 2847)}
+                      {formatCurrency(metrics.cost)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1">
-                    <TrendingUp className="w-3 h-3 text-emerald-500 mr-1" />
-                    <span className="text-xs text-emerald-600">↗ 12.3%</span>
-                    <span className="text-xs text-slate-500 ml-1">vs yesterday</span>
+                    <span className="text-xs text-slate-500">Last 7 days</span>
                   </div>
                 </Card>
                 
@@ -154,13 +143,11 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Clicks</span>
                     <span className="text-lg font-semibold text-slate-900">
-                      {formatNumber(metrics?.clicks || 1234)}
+                      {formatNumber(metrics.clicks)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1">
-                    <TrendingUp className="w-3 h-3 text-emerald-500 mr-1" />
-                    <span className="text-xs text-emerald-600">↗ 8.7%</span>
-                    <span className="text-xs text-slate-500 ml-1">vs yesterday</span>
+                    <span className="text-xs text-slate-500">CTR: {(metrics.ctr * 100).toFixed(2)}%</span>
                   </div>
                 </Card>
                 
@@ -168,16 +155,18 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Conversions</span>
                     <span className="text-lg font-semibold text-slate-900">
-                      {Math.round(metrics?.conversions || 47)}
+                      {Math.round(metrics.conversions)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1">
-                    <TrendingDown className="w-3 h-3 text-red-500 mr-1" />
-                    <span className="text-xs text-red-600">↘ 3.2%</span>
-                    <span className="text-xs text-slate-500 ml-1">vs yesterday</span>
+                    <span className="text-xs text-slate-500">Rate: {(metrics.conversionRate * 100).toFixed(2)}%</span>
                   </div>
                 </Card>
               </>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-slate-500">No metrics data available</p>
+              </div>
             )}
           </div>
         </div>
@@ -186,26 +175,38 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
         <div className="mb-6">
           <h4 className="text-sm font-medium text-slate-700 mb-3">Budget Pacing</h4>
           <div className="space-y-3">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-600">Monthly Budget</span>
-                <span className="text-sm font-medium text-slate-900">
-                  {formatCurrency(budgetData.monthly)}
-                </span>
+            {budgetLoading ? (
+              <div className="bg-slate-50 p-3 rounded-lg animate-pulse">
+                <div className="h-4 bg-slate-200 rounded mb-2"></div>
+                <div className="h-2 bg-slate-200 rounded mb-2"></div>
+                <div className="h-3 bg-slate-200 rounded w-2/3"></div>
               </div>
-              <Progress value={budgetData.percentUsed} className="mb-2" />
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500">
-                  Used: {formatCurrency(budgetData.used)}
-                </span>
-                <Badge 
-                  variant={budgetData.status === 'on_track' ? 'secondary' : 'destructive'}
-                  className="text-xs"
-                >
-                  {budgetData.status === 'on_track' ? 'On track' : 'Over pacing'}
-                </Badge>
+            ) : budgetData ? (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-slate-600">Monthly Budget</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {formatCurrency(budgetData.monthly)}
+                  </span>
+                </div>
+                <Progress value={budgetData.percentUsed} className="mb-2" />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-500">
+                    Used: {formatCurrency(budgetData.used)}
+                  </span>
+                  <Badge 
+                    variant={budgetData.status === 'on_track' ? 'secondary' : 'destructive'}
+                    className="text-xs"
+                  >
+                    {budgetData.status === 'on_track' ? 'On track' : 'Over pacing'}
+                  </Badge>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-slate-500">No budget data available</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -213,32 +214,48 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
         <div className="mb-6">
           <h4 className="text-sm font-medium text-slate-700 mb-3">Active Issues</h4>
           <div className="space-y-2">
-            {issues.map((issue) => (
-              <div 
-                key={issue.id}
-                className={`flex items-start p-3 rounded-lg border ${
-                  issue.type === 'warning' 
-                    ? 'bg-amber-50 border-amber-200' 
-                    : 'bg-blue-50 border-blue-200'
-                }`}
-              >
-                <div className={`w-2 h-2 rounded-full mr-2 mt-1 ${
-                  issue.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
-                }`}></div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-medium ${
-                    issue.type === 'warning' ? 'text-amber-800' : 'text-blue-800'
-                  }`}>
-                    {issue.title}
-                  </p>
-                  <p className={`text-xs ${
-                    issue.type === 'warning' ? 'text-amber-600' : 'text-blue-600'
-                  }`}>
-                    {issue.description}
-                  </p>
-                </div>
+            {issuesLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map((i) => (
+                  <div key={i} className="bg-slate-50 p-3 rounded-lg animate-pulse">
+                    <div className="h-3 bg-slate-200 rounded mb-2"></div>
+                    <div className="h-2 bg-slate-200 rounded w-3/4"></div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : issues.length > 0 ? (
+              issues.map((issue) => (
+                <div 
+                  key={issue.id}
+                  className={`flex items-start p-3 rounded-lg border ${
+                    issue.type === 'warning' 
+                      ? 'bg-amber-50 border-amber-200' 
+                      : 'bg-blue-50 border-blue-200'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full mr-2 mt-1 ${
+                    issue.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
+                  }`}></div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-medium ${
+                      issue.type === 'warning' ? 'text-amber-800' : 'text-blue-800'
+                    }`}>
+                      {issue.title}
+                    </p>
+                    <p className={`text-xs ${
+                      issue.type === 'warning' ? 'text-amber-600' : 'text-blue-600'
+                    }`}>
+                      {issue.description}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4">
+                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                <p className="text-sm text-slate-500">No active issues</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -246,12 +263,27 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
         <div>
           <h4 className="text-sm font-medium text-slate-700 mb-3">Recent Activity</h4>
           <div className="space-y-3">
-            {activities.map((activity) => (
-              <div key={activity.id} className="text-xs">
-                <span className="font-medium text-slate-700">{activity.title}</span>
-                <div className="text-slate-500 mt-1">{activity.timestamp}</div>
+            {activitiesLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-slate-50 p-2 rounded animate-pulse">
+                    <div className="h-3 bg-slate-200 rounded mb-1"></div>
+                    <div className="h-2 bg-slate-200 rounded w-1/2"></div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : activities.length > 0 ? (
+              activities.map((activity) => (
+                <div key={activity.id} className="text-xs">
+                  <span className="font-medium text-slate-700">{activity.title}</span>
+                  <div className="text-slate-500 mt-1">{activity.timestamp}</div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-slate-500">No recent activity</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

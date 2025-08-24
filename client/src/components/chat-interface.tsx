@@ -75,11 +75,11 @@ export default function ChatInterface({ selectedClient }: ChatInterfaceProps) {
     }
   };
 
-  const formatTimestamp = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatTimestamp = (dateInput: string | Date) => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
       return diffInMinutes === 0 ? 'Just now' : `${diffInMinutes} minutes ago`;

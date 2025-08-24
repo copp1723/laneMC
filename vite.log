@@ -1,0 +1,36 @@
+vite v5.4.19 building for production...
+transforming...
+✓ 3 modules transformed.
+x Build failed in 37ms
+error during build:
+[vite:esbuild] Transform failed with 2 errors:
+/Users/joshcopp/Desktop/LaneMC/client/src/App.tsx:53:10: ERROR: Unexpected closing "div" tag does not match opening "Router" tag
+/Users/joshcopp/Desktop/LaneMC/client/src/App.tsx:54:8: ERROR: Unexpected closing "Router" tag does not match opening "div" tag
+file: /Users/joshcopp/Desktop/LaneMC/client/src/App.tsx:53:10
+
+Unexpected closing "div" tag does not match opening "Router" tag
+51 |              </Switch>
+52 |            </main>
+53 |          </div>
+   |            ^
+54 |        </Router>
+55 |      </QueryClientProvider>
+
+Unexpected closing "Router" tag does not match opening "div" tag
+52 |            </main>
+53 |          </div>
+54 |        </Router>
+   |          ^
+55 |      </QueryClientProvider>
+56 |    );
+
+    at failureErrorWithLog (/Users/joshcopp/Desktop/LaneMC/node_modules/vite/node_modules/esbuild/lib/main.js:1472:15)
+    at /Users/joshcopp/Desktop/LaneMC/node_modules/vite/node_modules/esbuild/lib/main.js:755:50
+    at responseCallbacks.<computed> (/Users/joshcopp/Desktop/LaneMC/node_modules/vite/node_modules/esbuild/lib/main.js:622:9)
+    at handleIncomingPacket (/Users/joshcopp/Desktop/LaneMC/node_modules/vite/node_modules/esbuild/lib/main.js:677:12)
+    at Socket.readFromStdout (/Users/joshcopp/Desktop/LaneMC/node_modules/vite/node_modules/esbuild/lib/main.js:600:7)
+    at Socket.emit (node:events:517:28)
+    at addChunk (node:internal/streams/readable:368:12)
+    at readableAddChunk (node:internal/streams/readable:341:9)
+    at Readable.push (node:internal/streams/readable:278:10)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:190:23)
