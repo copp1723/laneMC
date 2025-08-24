@@ -3,3 +3,8 @@
 {"timestamp":"2025-08-23 20:09:29","level":"info","service":"lanemc","message":"Cache instance created: database_queries","config":{"ttl":120,"maxKeys":1000}}
 {"timestamp":"2025-08-23 20:09:29","level":"info","service":"lanemc","message":"Cache instance created: health_checks","config":{"ttl":30,"maxKeys":50}}
 {"timestamp":"2025-08-23 20:09:29","level":"info","service":"lanemc","message":"Cache instance created: user_sessions","config":{"ttl":900,"maxKeys":1000}}
+{"timestamp":"2025-08-23 20:26:21","level":"info","service":"lanemc","message":"Cache instance created: google_ads","config":{"ttl":300,"maxKeys":500}}
+{"timestamp":"2025-08-23 20:26:21","level":"info","service":"lanemc","message":"Cache instance created: surgical_analysis","config":{"ttl":600,"maxKeys":200}}
+{"timestamp":"2025-08-23 20:26:21","level":"info","service":"lanemc","message":"Cache instance created: database_queries","config":{"ttl":120,"maxKeys":1000}}
+{"timestamp":"2025-08-23 20:26:21","level":"info","service":"lanemc","message":"Cache instance created: health_checks","config":{"ttl":30,"maxKeys":50}}
+{"timestamp":"2025-08-23 20:26:21","level":"info","service":"lanemc","message":"Cache instance created: user_sessions","config":{"ttl":900,"maxKeys":1000}}
