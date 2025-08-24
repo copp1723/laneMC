@@ -4,6 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { apiRequest } from '@/lib/api';
+import { useAuth } from '@/hooks/use-auth';
 import type { GoogleAdsAccount } from '@shared/schema';
 
 interface QuickInsightsProps {
@@ -41,33 +43,35 @@ interface Activity {
 }
 
 export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
+  const { user } = useAuth();
 
   const { data: metrics, isLoading: metricsLoading } = useQuery<PerformanceMetrics>({
     queryKey: ['/api/google-ads/accounts', selectedClient?.id, 'metrics'],
-    enabled: !!selectedClient,
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/google-ads/accounts/${selectedClient?.id}/metrics`);
+      return response.json();
+    },
+    enabled: !!selectedClient && !!user,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const { data: budgetData, isLoading: budgetLoading } = useQuery<BudgetData>({
     queryKey: ['/api/google-ads/accounts', selectedClient?.id, 'pacing'],
-    enabled: !!selectedClient,
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/budget-pacing/account/${selectedClient?.id}`);
+      return response.json();
+    },
+    enabled: !!selectedClient && !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: issuesResponse, isLoading: issuesLoading } = useQuery({
     queryKey: ['/api/issues/actionable', selectedClient?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/issues/actionable?accountId=${selectedClient?.id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch issues');
-      }
+      const response = await apiRequest('GET', `/api/issues/actionable?accountId=${selectedClient?.id}`);
       return response.json();
     },
-    enabled: !!selectedClient,
+    enabled: !!selectedClient && !!user,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
@@ -93,7 +97,7 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
         }
       ];
     },
-    enabled: !!selectedClient,
+    enabled: !!selectedClient && !!user,
     staleTime: 15 * 60 * 1000, // 15 minutes
   });
 
@@ -113,6 +117,16 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
   };
+
+  if (!user) {
+    return (
+      <div className="w-80 bg-white border-r border-slate-200 p-6 overflow-y-auto">
+        <div className="text-center py-8">
+          <p className="text-slate-500">Please log in to view insights</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!selectedClient) {
     return (
