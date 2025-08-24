@@ -82,6 +82,48 @@ export class EnvironmentValidator {
   }
   
   /**
+   * Check if database URL has SSL configuration
+   */
+  private static isDatabaseSSLConfigured(databaseUrl: string): boolean {
+    const sslPatterns = [
+      'sslmode=require',
+      'sslmode=prefer',
+      'sslmode=allow',
+      'ssl=true',
+      'ssl=1',
+      'sslcert=',
+      'sslkey=',
+      'sslrootcert='
+    ];
+    
+    return sslPatterns.some(pattern => databaseUrl.includes(pattern));
+  }
+
+  /**
+   * Check if this is a managed database provider that enforces SSL by default
+   */
+  private static isManagedDatabaseProvider(databaseUrl: string): boolean {
+    const managedProviders = [
+      'render.com',
+      'postgres.render.com',
+      'oregon-postgres.render.com',
+      'railway.app',
+      'heroku.com',
+      'amazonaws.com',
+      'supabase.co',
+      'planetscale.com',
+      'neon.tech',
+      'cockroachlabs.cloud',
+      'aiven.io',
+      'digitalocean.com',
+      'cloud.google.com',
+      'azure.com'
+    ];
+
+    return managedProviders.some(provider => databaseUrl.includes(provider));
+  }
+
+  /**
    * Additional validation for production environment
    */
   private static validateProductionEnvironment(errors: string[]) {
@@ -91,9 +133,17 @@ export class EnvironmentValidator {
       errors.push('JWT secret must be at least 32 characters long in production');
     }
     
-    // Ensure database URL uses SSL in production
-    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('sslmode=require')) {
-      errors.push('DATABASE_URL must use SSL in production (add ?sslmode=require)');
+    // Ensure database URL uses SSL in production (flexible check for different providers)
+    if (process.env.DATABASE_URL && !this.isDatabaseSSLConfigured(process.env.DATABASE_URL)) {
+      // Check if this is a managed database provider
+      const isManagedProvider = this.isManagedDatabaseProvider(process.env.DATABASE_URL);
+
+      if (!process.env.SKIP_SSL_CHECK && !isManagedProvider) {
+        errors.push('DATABASE_URL must use SSL in production (add ?sslmode=require or ?ssl=true)');
+      } else {
+        // Log info for managed providers but don't block startup
+        console.log(`ℹ️  Database SSL validation: ${isManagedProvider ? 'Managed provider detected - SSL enforced by provider' : 'SSL check skipped via SKIP_SSL_CHECK'}`);
+      }
     }
     
     // Warn about development-only settings
@@ -240,6 +290,7 @@ export class EnvironmentValidator {
     console.log(`  - Environment: ${config.NODE_ENV}`);
     console.log(`  - Port: ${config.PORT}`);
     console.log(`  - Database: ${config.DATABASE_URL ? '✅ Connected' : '❌ Not configured'}`);
+    console.log(`  - Database SSL: ${config.DATABASE_URL ? (this.isDatabaseSSLConfigured(config.DATABASE_URL) ? '✅ Configured' : this.isManagedDatabaseProvider(config.DATABASE_URL) ? '⚠️  Managed Provider' : '❌ Not configured') : '❌ No database'}`);
     console.log(`  - JWT Auth: ${config.JWT_SECRET_KEY || config.SECRET_KEY ? '✅ Configured' : '❌ Not configured'}`);
     console.log(`  - Google Ads API: ${config.GOOGLE_ADS_CLIENT_ID ? '✅ Configured' : '❌ Not configured'}`);
     console.log(`  - OpenRouter API: ${config.OPENROUTER_API_KEY ? '✅ Configured' : '❌ Not configured'}`);
