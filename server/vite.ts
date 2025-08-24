@@ -92,8 +92,18 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (req, res) => {
+  // Only serve index.html for non-API routes and non-static assets
+  app.get("*", (req, res, next) => {
+    // Skip API routes
+    if (req.originalUrl.startsWith('/api/')) {
+      return next();
+    }
+
+    // Skip static assets (js, css, images, fonts, etc.)
+    if (req.originalUrl.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+      return next();
+    }
+
     console.log(`📄 Serving index.html for: ${req.originalUrl}`);
     res.sendFile(indexPath);
   });
