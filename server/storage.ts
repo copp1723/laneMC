@@ -25,6 +25,8 @@ const pool = new Pool({
   maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
   // Retry configuration
   allowExitOnIdle: false, // Keep the pool alive
+  // SSL configuration for production and managed database providers
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 // Connection error handling

@@ -15,7 +15,8 @@ import Logger from '../server/services/logger';
 async function main() {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 5 // Lower connection pool for script
+    max: 5, // Lower connection pool for script
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   });
 
   try {

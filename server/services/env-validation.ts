@@ -176,6 +176,8 @@ export class EnvironmentValidator {
         connectionString: process.env.DATABASE_URL,
         max: 1,
         connectionTimeoutMillis: 5000,
+        // Use same SSL configuration as main pool
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
       });
 
       try {
