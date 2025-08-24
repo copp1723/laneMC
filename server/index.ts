@@ -103,18 +103,27 @@ app.use(helmet({
       styleSrc: [
         "'self'",
         "'unsafe-inline'",
-        "https://fonts.googleapis.com" // Allow Google Fonts
+        "https://fonts.googleapis.com"
+      ],
+      styleSrcElem: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com"
       ],
       scriptSrc: [
         "'self'",
         "'unsafe-inline'",
         "'unsafe-eval'"
       ],
+      scriptSrcElem: [
+        "'self'",
+        "'unsafe-inline'"
+      ],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
       fontSrc: [
         "'self'",
-        "https://fonts.gstatic.com" // Allow Google Fonts
+        "https://fonts.gstatic.com"
       ],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
