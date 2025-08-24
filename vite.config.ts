@@ -1,25 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { visualizer } from "rollup-plugin-visualizer";
 import { analyzer } from "vite-bundle-analyzer";
 
 export default defineConfig((configEnv) => {
-  const plugins = [react(), runtimeErrorOverlay()];
-  
-  // Only add cartographer plugin in development on Replit
-  if (process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined) {
-    try {
-      // Dynamic import handled synchronously for build
-      const cartographer = require("@replit/vite-plugin-cartographer").cartographer;
-      if (cartographer) {
-        plugins.push(cartographer());
-      }
-    } catch (e) {
-      // Cartographer not available, continue without it
-    }
-  }
+  const plugins = [react()];
 
   // Add bundle analysis plugins for production builds
   if (process.env.ANALYZE_BUNDLE) {

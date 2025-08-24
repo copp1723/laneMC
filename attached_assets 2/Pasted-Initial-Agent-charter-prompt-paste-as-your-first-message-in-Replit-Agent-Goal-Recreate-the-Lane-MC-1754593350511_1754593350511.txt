@@ -1,0 +1,47 @@
+Initial Agent charter prompt (paste as your first message in Replit Agent)
+Goal
+Recreate the Lane MCP Google Ads Automation Platform concept inside Replit as a fresh build. Reuse only my existing environment variables (names/values live in Replit Secrets), my Google Ads OAuth/developer token setup, and my existing Render/Postgres database connection. Everything else should be re-implemented by you in this Replit project. Do not scaffold a generic template without aligning to the concept spec below. Plan first, then wait for my approval.
+Concept spec (what to build)
+
+Phases to support end-to-end:
+Goal capture via chat with AI clarification → structured brief
+Brief review + approval (human-in-the-loop)
+Campaign generation (structure, keywords, ad copy, budgets)
+Daily ops & pacing (2-hour checks, ±5% budget accuracy target)
+Issue management (diagnostics → escalation)
+Performance reporting (real-time dashboard, plain-language insights)
+Month-end reset (partially implemented: propose MVP to complete)
+UX: Modern React UI with dashboard, chat (streaming), campaign mgmt, pacing viz.
+Backend: Python/Flask (or FastAPI if you justify), JWT auth with roles, health checks.
+AI: Single “Google Ads” agent accessed via OpenRouter; streaming responses.
+Google Ads: Real integration v15+ with OAuth2; safe defaults (mock mode in dev).
+Database: Use existing Render Postgres via DATABASE_URL from Secrets. Do not run destructive migrations without my explicit approval.
+What to reuse (only)
+
+Existing env variable names and values (already in Replit Secrets).
+Existing Google Ads connection (client ID/secret, developer token, refresh token) via env.
+Existing Render/Postgres database connection via DATABASE_URL.
+Everything else (code, structure, UI) is to be recreated to match the concept.
+Constraints and guardrails
+
+Do not hardcode secrets. Read everything from environment.
+Assume ENVIRONMENT=development by default; mock Google Ads in dev until I approve real calls.
+When connecting to the existing DB for the first time, treat it as read-only; propose a schema strategy (new schema or migrations) and wait for approval before any write or DDL.
+Bind server to 0.0.0.0 and use PORT from env.
+Prefer serving the built React app from Flask in deployment to keep a single process.
+Preserve compatibility with current env var names; do not invent new names unless necessary (and ask first).
+Deliverables to produce before coding
+
+A numbered plan with component diagram, milestones, and estimates; include where you will create checkpoints.
+A concise API design (auth, chat, campaign, pacing, reporting) and minimal data model proposal that respects our existing DB (read-only first).
+The .replit (and/or replit.nix) run/deploy plan, including dev (API + Vite proxy) vs deploy (Flask serves built frontend).
+A test plan (health checks, auth flow, AI chat smoke, Google Ads list-accounts in mock, DB connectivity).
+A rollback plan keyed to checkpoints.
+Environment variables (names only; already present in Secrets)
+
+OPENROUTER_API_KEY, OPENROUTER_DEFAULT_MODEL
+GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_REFRESH_TOKEN
+SECRET_KEY, JWT_SECRET_KEY
+DATABASE_URL
+ENVIRONMENT
+Ask clarifying questions if anything is missing. Wait for my approval of the plan before you begin. Create a checkpoint before and after each major step.

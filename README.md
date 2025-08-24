@@ -1,8 +1,8 @@
-# Lane MCP - Google Ads Automation Platform
+# LaneMC - Google Ads Automation Platform
 
 ## Overview
 
-Lane MCP is an AI-powered Google Ads automation platform designed for agencies to streamline campaign management, optimization, and reporting. The application provides an end-to-end workflow from goal capture through AI chat to campaign execution and performance monitoring. Built as a modern web application, it features a React frontend with a Node.js/Express backend, integrated with Google Ads API and OpenRouter for AI capabilities.
+LaneMC is an AI-powered Google Ads automation platform designed for agencies to streamline campaign management, optimization, and reporting. The application provides an end-to-end workflow from goal capture through AI chat to campaign execution and performance monitoring. Built as a modern web application, it features a React frontend with a Node.js/Express backend, integrated with Google Ads API and OpenRouter for AI capabilities.
 
 ## User Preferences
 
