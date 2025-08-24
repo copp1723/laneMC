@@ -33,7 +33,7 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
-  const accounts = accountsResponse?.data || [];
+  const accounts: GoogleAdsAccount[] = (accountsResponse as any)?.data || [];
 
   const syncMutation = useMutation({
     mutationFn: () => apiRequest('POST', '/api/google-ads/accounts/sync'),
@@ -56,7 +56,7 @@ export default function ClientSelector({ onClientChange }: ClientSelectorProps) 
 
   const handleClientChange = (clientId: string) => {
     setSelectedClientId(clientId);
-    const selectedClient = accounts.find(acc => acc.id === clientId) || null;
+  const selectedClient = accounts.find((acc) => acc.id === clientId) || null;
     onClientChange?.(selectedClient);
   };
 
