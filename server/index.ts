@@ -99,41 +99,41 @@ app.get("/api/monitoring/circuit-breakers", (req, res) => {
 });
 
 // 2. Security headers (helmet)
+// Allow disabling CSP quickly for emergency debugging: set DISABLE_CSP=1
+const disableCsp = process.env.DISABLE_CSP === '1';
+if (disableCsp) {
+  console.warn('[SECURITY] Content Security Policy DISABLED via DISABLE_CSP=1 (do NOT leave this enabled in production)');
+}
 app.use(helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: disableCsp ? false : {
+    useDefaults: false,
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://fonts.googleapis.com"
-      ],
-      styleSrcElem: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://fonts.googleapis.com"
-      ],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "'unsafe-eval'"
-      ],
-      scriptSrcElem: [
-        "'self'",
-        "'unsafe-inline'"
-      ],
+      // Allow inline styles (Tailwind JIT + Radix) and Google Fonts
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      // Allow dynamic import / React lazy (unsafe-eval) and inline (Vite preload polyfill safety)
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrcElem: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      // Images (self, data URIs, https CDNs)
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: [
-        "'self'",
-        "https://fonts.gstatic.com"
-      ],
+      // Broaden connectSrc so front-end can call same-origin API & future external APIs during triage.
+      // TODO: tighten by listing explicit domains once stabilized.
+      connectSrc: ["'self'", "https:", "wss:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
+      workerSrc: ["'self'", "blob:"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      manifestSrc: ["'self'"],
+      upgradeInsecureRequests: [],
     },
   },
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  // Keep other helmet defaults
+  referrerPolicy: { policy: 'no-referrer' }
 }));
 
 // 2.5. Response compression (gzip/deflate)

@@ -57,10 +57,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await apiRequest('POST', '/api/auth/login', { email, password });
     const data = await response.json();
-    
+
     localStorage.setItem('auth_token', data.token);
     setUser(data.user);
-    setLocation('/');
+
+    // Small delay to ensure user state is updated before redirect
+    setTimeout(() => {
+      setLocation('/');
+    }, 100);
   };
 
   const register = async (username: string, email: string, password: string) => {
