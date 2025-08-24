@@ -22,6 +22,9 @@ import { CircuitBreakerManager } from "./services/circuit-breaker";
 
 const app = express();
 
+// Trust proxy for Render deployment (fixes rate limiting)
+app.set('trust proxy', 1);
+
 // CRITICAL: Middleware order - DO NOT CHANGE without coordinating with parallel work
 // 1. Health endpoints (BEFORE rate limiting)
 
