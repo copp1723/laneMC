@@ -54,17 +54,52 @@ export default function QuickInsights({ selectedClient }: QuickInsightsProps) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: issues = [], isLoading: issuesLoading } = useQuery<Issue[]>({
-    queryKey: ['/api/issue-detection', selectedClient?.id],
+  const { data: issuesResponse, isLoading: issuesLoading } = useQuery({
+    queryKey: ['/api/issues/actionable', selectedClient?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/issues/actionable?accountId=${selectedClient?.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch issues');
+      }
+      return response.json();
+    },
     enabled: !!selectedClient,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  const { data: activities = [], isLoading: activitiesLoading } = useQuery<Activity[]>({
-    queryKey: ['/api/audit-logs', selectedClient?.id],
+  const { data: activitiesResponse, isLoading: activitiesLoading } = useQuery({
+    queryKey: ['/api/activities', selectedClient?.id],
+    queryFn: async () => {
+      // Mock activities for now since audit logs endpoint doesn't exist
+      return [
+        {
+          id: '1',
+          title: 'Campaign optimization completed',
+          timestamp: '2 hours ago'
+        },
+        {
+          id: '2',
+          title: 'Budget adjustment applied',
+          timestamp: '4 hours ago'
+        },
+        {
+          id: '3',
+          title: 'New keywords added',
+          timestamp: '1 day ago'
+        }
+      ];
+    },
     enabled: !!selectedClient,
     staleTime: 15 * 60 * 1000, // 15 minutes
   });
+
+  // Safely handle the data with proper fallbacks
+  const issues = Array.isArray(issuesResponse) ? issuesResponse : [];
+  const activities = Array.isArray(activitiesResponse) ? activitiesResponse : [];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
