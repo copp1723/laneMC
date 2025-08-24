@@ -90,21 +90,22 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
-
-  // Only serve index.html for non-API routes and non-static assets
-  app.get("*", (req, res, next) => {
-    // Skip API routes
-    if (req.originalUrl.startsWith('/api/')) {
-      return next();
+  app.use(express.static(distPath, {
+    setHeaders: (res, filePath) => {
+      if (/\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp)$/i.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (/\.(html)$/i.test(filePath)) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
     }
+  }));
 
-    // Skip static assets (js, css, images, fonts, etc.)
-    if (req.originalUrl.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
-      return next();
-    }
-
-    console.log(`📄 Serving index.html for: ${req.originalUrl}`);
+  // SPA fallback: only for routes without an extension and not /api
+  app.get('*', (req, res, next) => {
+    const urlPath = req.path; // excludes query string
+    if (urlPath.startsWith('/api')) return next();
+    if (/\.[a-zA-Z0-9]{2,8}$/.test(urlPath)) return next(); // has extension -> not SPA route
+    console.log(`📄 SPA route -> index.html: ${req.originalUrl}`);
     res.sendFile(indexPath);
   });
 }
