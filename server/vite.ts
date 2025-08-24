@@ -70,6 +70,19 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   // In production, the built files should be in dist/public
   const distPath = path.resolve(process.cwd(), "dist", "public");
+  const indexPath = path.resolve(distPath, "index.html");
+
+  console.log(`🗂️  Static serving setup:`);
+  console.log(`  - Working directory: ${process.cwd()}`);
+  console.log(`  - Dist path: ${distPath}`);
+  console.log(`  - Index path: ${indexPath}`);
+  console.log(`  - Dist exists: ${fs.existsSync(distPath)}`);
+  console.log(`  - Index exists: ${fs.existsSync(indexPath)}`);
+  
+  if (fs.existsSync(distPath)) {
+    const files = fs.readdirSync(distPath);
+    console.log(`  - Files in dist: ${files.join(', ')}`);
+  }
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
@@ -80,7 +93,8 @@ export function serveStatic(app: Express) {
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+  app.use("*", (req, res) => {
+    console.log(`📄 Serving index.html for: ${req.originalUrl}`);
+    res.sendFile(indexPath);
   });
 }
