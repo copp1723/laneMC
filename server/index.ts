@@ -98,6 +98,17 @@ app.get("/api/monitoring/circuit-breakers", (req, res) => {
   }
 });
 
+// Lightweight client error ingestion (early so it works even if later middleware breaks)
+app.post('/api/monitoring/client-error', express.json({ limit: '25kb' }), (req, res) => {
+  try {
+    const { message, stack, type, meta } = req.body || {};
+    Logger.error('ClientRuntimeError', { message, stack, type, meta });
+  } catch (e) {
+    Logger.error('ClientRuntimeErrorHandlerFailed', { error: e instanceof Error ? e.message : 'unknown' });
+  }
+  res.json({ ok: true });
+});
+
 // 2. Security headers (helmet)
 // Allow disabling CSP quickly for emergency debugging: set DISABLE_CSP=1
 const disableCsp = process.env.DISABLE_CSP === '1';
