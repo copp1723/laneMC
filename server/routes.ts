@@ -30,6 +30,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register campaign generator routes
   registerCampaignGeneratorRoutes(app);
 
+  // Test endpoint (no auth required)
+  app.get("/api/test", (req, res) => {
+    res.json({
+      success: true,
+      message: "API is working!",
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV
+    });
+  });
+
+  // Create admin user endpoint (no auth required for setup)
+  app.post("/api/setup/admin", async (req, res) => {
+    try {
+      const adminEmail = 'admin@lanemc.com';
+      const adminPassword = 'admin123';
+      const adminUsername = 'admin';
+
+      // Check if admin user already exists
+      const existingUser = await storage.getUserByEmail(adminEmail);
+      if (existingUser) {
+        return res.json({
+          success: true,
+          message: 'Admin user already exists',
+          email: adminEmail
+        });
+      }
+
+      // Hash the password
+      const hashedPassword = await hashPassword(adminPassword);
+
+      // Create the admin user
+      const adminUser = await storage.createUser({
+        username: adminUsername,
+        email: adminEmail,
+        password: hashedPassword,
+        role: 'admin'
+      });
+
+      res.json({
+        success: true,
+        message: 'Admin user created successfully!',
+        email: adminEmail,
+        password: adminPassword,
+        userId: adminUser.id
+      });
+
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   // Auth routes with validation
   app.post("/api/auth/register",
     validate({ body: authSchemas.register }),
